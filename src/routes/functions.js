@@ -5,27 +5,24 @@ import { twilio } from '../lib/twilio.js';
 import { supa } from '../lib/supabase.js';
 
 const r = Router();
-r.use((req,_res,next)=>{ next(); });
 
 r.post('/fn/check-identity', async (req,res)=>{
   const { lead_id, confirm_name, last4 } = req.body.args || {};
-  // TODO: read lead from DB and compare
-  return res.json({ match: true, reason:'ok' });
+  // TODO: compare with DB; return real result later
+  res.json({ match: true, reason: 'ok' });
 });
 
 r.post('/fn/create-payment-link', async (req,res)=>{
-  const { lead_id, amount, customer_email, description } = req.body.args || {};
+  const { lead_id, amount, description } = req.body.args || {};
   if (!amount) return res.status(400).json({ error: 'amount required' });
   const unitAmount = Math.round(Number(amount)*100);
   const session = await stripe.checkout.sessions.create({
     mode:'payment',
     line_items:[{ price_data:{ currency, product_data:{ name: description || 'Consulta médica - Geniumed' }, unit_amount: unitAmount }, quantity:1 }],
-    customer_email,
     metadata:{ lead_id: String(lead_id || '') },
     success_url: `${process.env.APP_BASE_URL}/pay/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.APP_BASE_URL}/pay/cancel`
   });
-  // TODO: insert into payments table (pending)
   res.json({ url: session.url, amount, currency });
 });
 
@@ -41,9 +38,14 @@ r.post('/fn/check-availability', async (_req,res)=>{
 });
 
 r.post('/fn/book-appointment', async (req,res)=>{
-  const { doctor_email, start, duration_min, timezone } = req.body.args || {};
-  if(!doctor_email || !start) return res.status(400).json({ error:'doctor_email and start required' });
-  const ev = await bookAppointment({ doctor_email, start, durationMin: duration_min, timezone });
+  const { doctor_id, start, duration_min, timezone } = req.body.args || {};
+  if(!start) return res.status(400).json({ error:'start required' });
+  let doctorName = '';
+  if (doctor_id) {
+    const { data } = await supa.from('doctors').select('name').eq('id', doctor_id).limit(1);
+    doctorName = data?.[0]?.name || '';
+  }
+  const ev = await bookAppointment({ start, durationMin: duration_min, timezone, doctorName });
   res.json({ ok:true, gcal_event_id: ev.id, gcal_link: ev.htmlLink });
 });
 
@@ -61,53 +63,41 @@ r.post('/fn/schedule-call', async (req,res)=>{
   res.json({ ok:true });
 });
 
-r.post('/fn/recommend_doctor', async (req, res) => {
+r.post('/fn/recommend_doctor', async (req,res)=>{
   const { city, need, specialty, language } = req.body.args || {};
-
   const { data, error } = await supa
     .from('doctors')
     .select('id,name,specialty,city,languages,tags,description,telemedicine,specialty_id,specialties(name,tags,synonyms)')
     .eq('is_active', true)
     .limit(200);
-  if (error) return res.status(500).json({ error: error.message });
+  if(error) return res.status(500).json({ error:error.message });
 
-  function score(doc: any) {
-    let s = 0;
+  function score(doc){
+    let s=0;
     const specName = (doc.specialty || doc.specialties?.name || '').toLowerCase();
     if (specialty && specName.includes(String(specialty).toLowerCase())) s += 4;
     if (city && doc.city && doc.city.toLowerCase() === String(city).toLowerCase()) s += 2;
-    if (language && Array.isArray(doc.languages) &&
-        doc.languages.some((l: string) => l.toLowerCase().startsWith(String(language).toLowerCase()))) s += 2;
+    if (language && Array.isArray(doc.languages) && doc.languages.some(l=>String(l).toLowerCase().startsWith(String(language).toLowerCase()))) s += 2;
     if (need) {
       const toks = String(need).toLowerCase().split(/[^a-zá-ú0-9]+/i).filter(Boolean);
-      const hay = new Set<string>([
-        ...(doc.tags || []),
-        ...((doc.specialties?.tags || []) as string[]),
-        ...((doc.specialties?.synonyms || []) as string[])
-      ].map((t: string) => t.toLowerCase()));
-      if (toks.some((t: string) => hay.has(t))) s += 3;
+      const hay = new Set([...(doc.tags||[]), ...((doc.specialties?.tags)||[]), ...((doc.specialties?.synonyms)||[])]
+        .map(t=>String(t).toLowerCase()));
+      if (toks.some(t => hay.has(t))) s += 3;
     }
-    return s; // no price/duration bias
+    return s;
   }
 
-  const ranked = (data || []).map((d: any) => ({ d, s: score(d) })).sort((a, b) => b.s - a.s);
-  if (!ranked.length || ranked[0].s <= 0) return res.json({ ok: false, reason: 'no_match' });
+  const ranked=(data||[]).map(d=>({d,s:score(d)})).sort((a,b)=>b.s-a.s);
+  if(!ranked.length || ranked[0].s<=0) return res.json({ ok:false, reason:'no_match' });
 
   const top = ranked[0].d;
-  return res.json({
-    ok: true,
-    doctor: {
-      id: top.id,
-      name: top.name,
-      specialty: top.specialty || top.specialties?.name || null,
-      city: top.city,
-      languages: top.languages,
-      telemedicine: top.telemedicine,
-      tags: top.tags,
-      description: top.description,
-      specialty_id: top.specialty_id
-    }
-  });
+  res.json({ ok:true, doctor: {
+    id: top.id, name: top.name,
+    specialty: top.specialty || top.specialties?.name || null,
+    city: top.city, languages: top.languages,
+    telemedicine: top.telemedicine, tags: top.tags, description: top.description,
+    specialty_id: top.specialty_id
+  }});
 });
 
 export default r;

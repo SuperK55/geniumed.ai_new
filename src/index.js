@@ -13,6 +13,7 @@ import './scheduler.js';
 import { rawBodySaver } from './middleware/rawBody.js';
 
 const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ type: '*/*', verify: rawBodySaver }));
 app.use(cors());
 
@@ -23,6 +24,9 @@ app.use(twilioRoutes);
 app.use(stripeWebhook);
 app.use(functions);
 
-app.use((err:any,_req:any,res:any,_next:any)=>{ log.error(err); res.status(500).json({ error: err?.message || 'server error' }); });
+app.use((err, _req, res, _next) => {
+  log.error(err);
+  res.status(500).json({ error: err?.message || 'server error' });
+});
 
 app.listen(env.PORT, () => log.info(`API listening on :${env.PORT}`));
