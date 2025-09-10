@@ -1,0 +1,221 @@
+{
+    "info": {
+      "name": "Geniumed JS Backend",
+      "_postman_id": "a9d8e0e0-6e7e-4e1a-8c32-7e5b3f7f3b6a",
+      "description": "Postman collection to test the Geniumed JavaScript backend (health, lead submit, functions, webhooks).",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Health",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+        },
+        "response": []
+      },
+      {
+        "name": "Lead - Submit",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\": \"João da Silva\",\n  \"phone\": \"+5511999999999\",\n  \"city\": \"São Paulo\",\n  \"specialty\": \"Dermatologista\",\n  \"reason\": \"acne\",\n  \"whatsapp\": \"whatsapp:+5511999999999\",\n  \"preferred_channel\": \"call\"\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/lead/submit", "host": ["{{baseUrl}}"], "path": ["lead", "submit"] },
+          "description": "Creates a lead and immediately triggers an outbound Retell call (attempt #1)."
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Status is 200', function(){ pm.response.to.have.status(200); });",
+                "try {",
+                "  const json = pm.response.json();",
+                "  if(json.lead_id){ pm.collectionVariables.set('lead_id', json.lead_id); }",
+                "  if(json.doctor_id){ pm.collectionVariables.set('doctor_id', json.doctor_id); }",
+                "} catch(e) {}"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Fn - Recommend Doctor",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"args\": {\n    \"city\": \"São Paulo\",\n    \"need\": \"acne\",\n    \"specialty\": \"Dermatologista\"\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/fn/recommend_doctor", "host": ["{{baseUrl}}"], "path": ["fn", "recommend_doctor"] }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Status is 200', function(){ pm.response.to.have.status(200); });",
+                "try {",
+                "  const json = pm.response.json();",
+                "  if(json.doctor && json.doctor.id){ pm.collectionVariables.set('doctor_id', json.doctor.id); }",
+                "} catch(e) {}"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Fn - Create Payment Link",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"args\": {\n    \"lead_id\": \"{{lead_id}}\",\n    \"amount\": \"280\",\n    \"description\": \"Consulta com {{doctor_name}} ({{doctor_specialty}})\"\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/fn/create-payment-link", "host": ["{{baseUrl}}"], "path": ["fn", "create-payment-link"] }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Status is 200', function(){ pm.response.to.have.status(200); });",
+                "try {",
+                "  const json = pm.response.json();",
+                "  if(json.url){ pm.collectionVariables.set('payment_url', json.url); }",
+                "} catch(e) {}"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Fn - Send Payment Link (WhatsApp)",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"args\": {\n    \"to\": \"whatsapp:+5511999999999\",\n    \"url\": \"{{payment_url}}\"\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/fn/send-payment-link", "host": ["{{baseUrl}}"], "path": ["fn", "send-payment-link"] }
+        },
+        "response": []
+      },
+      {
+        "name": "Fn - Set Communication Preference",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"args\": {\n    \"lead_id\": \"{{lead_id}}\",\n    \"preferred_channel\": \"whatsapp\"\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/fn/set-communication-preference", "host": ["{{baseUrl}}"], "path": ["fn", "set-communication-preference"] }
+        },
+        "response": []
+      },
+      {
+        "name": "Fn - Schedule Callback",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"args\": {\n    \"lead_id\": \"{{lead_id}}\",\n    \"when_iso\": \"2025-09-08T16:00:00-03:00\"\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/fn/schedule-call", "host": ["{{baseUrl}}"], "path": ["fn", "schedule-call"] }
+        },
+        "response": []
+      },
+      {
+        "name": "Fn - Book Appointment",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"args\": {\n    \"doctor_id\": \"{{doctor_id}}\",\n    \"start\": \"2025-09-09T14:00:00-03:00\",\n    \"duration_min\": 30,\n    \"timezone\": \"America/Sao_Paulo\"\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/fn/book-appointment", "host": ["{{baseUrl}}"], "path": ["fn", "book-appointment"] }
+        },
+        "response": []
+      },
+      {
+        "name": "Webhook (Retell) - DEV Only",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" },
+            { "key": "x-retell-signature", "value": "sha256=<compute-or-disable-in-dev>" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"type\": \"call_ended\",\n  \"call_id\": \"sample-call-id\",\n  \"outcome\": \"no_answer\",\n  \"summary\": {\"result\": \"no_answer\"}\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/retell/webhook", "host": ["{{baseUrl}}"], "path": ["retell", "webhook"] },
+          "description": "Signed by Retell in prod. In local dev you can temporarily bypass signature verification."
+        },
+        "response": []
+      },
+      {
+        "name": "Webhook (Twilio WA) - DEV Only",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+            { "key": "x-twilio-signature", "value": "<computed-by-twilio>" }
+          ],
+          "body": {
+            "mode": "urlencoded",
+            "urlencoded": [
+              { "key": "From", "value": "whatsapp:+5511999999999", "type": "text" },
+              { "key": "Body", "value": "WhatsApp", "type": "text" },
+              { "key": "NumMedia", "value": "0", "type": "text" }
+            ]
+          },
+          "url": { "raw": "{{baseUrl}}/twilio/whatsapp/webhook", "host": ["{{baseUrl}}"], "path": ["twilio", "whatsapp", "webhook"] },
+          "description": "Signed by Twilio in prod. In local dev, bypass verification or use a public URL."
+        },
+        "response": []
+      },
+      {
+        "name": "Webhook (Stripe) - DEV Only",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" },
+            { "key": "stripe-signature", "value": "t=1234,v1=<computed>" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"cs_test_123\",\n      \"metadata\": { \"lead_id\": \"{{lead_id}}\" },\n      \"amount_total\": 28000\n    }\n  }\n}"
+          },
+          "url": { "raw": "{{baseUrl}}/webhook/stripe", "host": ["{{baseUrl}}"], "path": ["webhook", "stripe"] },
+          "description": "Use Stripe CLI for signed events: `stripe listen --forward-to localhost:8080/webhook/stripe`"
+        },
+        "response": []
+      }
+    ],
+    "variable": [
+      { "key": "baseUrl", "value": "http://localhost:8080", "type": "default" },
+      { "key": "lead_id", "value": "", "type": "default" },
+      { "key": "doctor_id", "value": "", "type": "default" },
+      { "key": "payment_url", "value": "", "type": "default" },
+      { "key": "doctor_name", "value": "Dra. Ana Souza", "type": "default" },
+      { "key": "doctor_specialty", "value": "Dermatologista", "type": "default" }
+    ]
+  }
+  

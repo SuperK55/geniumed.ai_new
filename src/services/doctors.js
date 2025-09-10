@@ -18,7 +18,7 @@ export function scoreDoctor(doc, p){
 export async function pickDoctorForLead(p){
   const { data, error } = await supa
     .from('doctors')
-    .select('id,name,specialty,city,languages,tags,description,telemedicine,specialty_id,specialties(name,tags,synonyms)')
+    .select('id,name,specialty,city,languages,tags,description,telemedicine,specialty_id,price_first,price_return,specialties(name,tags,synonyms)')
     .eq('is_active', true)
     .limit(200);
   if(error) throw new Error(error.message);
