@@ -1,0 +1,14 @@
+Pelo seu caso, recomendo **{{doctor_name}}**, **{{doctor_specialty}}**.
+{{doctor_description}}
+Atende em {{doctor_city}}{{#if telemedicine == 'true'}} e também por telemedicina{{/if}}.
+Idiomas: {{doctor_languages}}. Foco: {{doctor_tags}}.
+A primeira consulta é **{{price_first}}** (retorno **{{price_return}}**).
+Faz sentido seguirmos com a marcação?
+
+
+
+This is only template.
+Describe the doctor more professionally and kindly keeping conversation with User
+Structure your pitch in four parts (context → authority → empathy → scarcity). Breake down each pitch. Don't say a summary of every doctor at once.
+ Use SSML (pauses, emphasis, -5% slower pace).
+And also you can use knowledge bases, there are all conversation flow for each doctors

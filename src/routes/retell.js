@@ -8,7 +8,7 @@ import { env } from '../config/env.js';
 const r = Router();
 // const nextRetryAt = () => { const n=new Date(); n.setHours(n.getHours()+4); return n.toISOString(); };
 
-function computeNextRetry(attemptNo, { inVoicemail = false } = {}) {
+async function computeNextRetry(attemptNo, { inVoicemail = false, leadId = null } = {}) {
   const now = new Date();
 
   // If voicemail, try again soon (15–25 min) to catch them shortly after
@@ -18,14 +18,79 @@ function computeNextRetry(attemptNo, { inVoicemail = false } = {}) {
     return d.toISOString();
   }
 
-  // Otherwise stagger across day-parts to avoid voicemail again
-  const daypartHours = [10, 15, 19]; // local time windows
-  const nextHour = daypartHours[(attemptNo - 1) % daypartHours.length];
-  const d = new Date(now);
-  // if we're past today’s window, schedule for tomorrow
-  if (now.getHours() >= nextHour) d.setDate(d.getDate() + 1);
-  d.setHours(nextHour, Math.floor(Math.random() * 20) * 3, 0, 0); // randomize minutes
-  return d.toISOString();
+  // Get appointment information for this lead if leadId is provided
+  let appointmentTime = null;
+  if (leadId) {
+    try {
+      const { data: appointments } = await supa
+        .from('appointments')
+        .select('start_at')
+        .eq('lead_id', leadId)
+        .gte('start_at', now.toISOString()) // Only future appointments
+        .order('start_at', { ascending: true })
+        .limit(1);
+      
+      if (appointments && appointments.length > 0) {
+        appointmentTime = new Date(appointments[0].start_at);
+      }
+    } catch (error) {
+      // If there's an error querying appointments, continue with original logic
+      console.error('Error querying appointments:', error);
+    }
+  }
+
+  // New time windows: 10:00 AM and 6:00 PM
+  // Calculate next available time slot
+  const calculateNextSlot = (fromTime) => {
+    const d = new Date(fromTime);
+    const currentHour = d.getHours();
+    const currentMinute = d.getMinutes();
+    
+    // Check if we can schedule for today's 6 PM (and it's before 6 PM)
+    if (currentHour < 18 || (currentHour === 18 && currentMinute === 0)) {
+      d.setHours(18, 0, 0, 0);
+      return d;
+    }
+    
+    // Otherwise, schedule for tomorrow's 10 AM
+    d.setDate(d.getDate() + 1);
+    d.setHours(10, 0, 0, 0);
+    return d;
+  };
+  
+  let nextRetryTime = calculateNextSlot(now);
+  
+  // If there's an appointment, check if we need to adjust the retry time
+  if (appointmentTime) {
+    const timeDiffMs = Math.abs(appointmentTime.getTime() - nextRetryTime.getTime());
+    const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+    
+    // If the difference between next retry time and appointment is less than 2 hours,
+    // move to the next time slot
+    if (timeDiffHours < 2) {
+      // If next retry is 6 PM and too close to appointment, move to next day 10 AM
+      if (nextRetryTime.getHours() === 18) {
+        nextRetryTime.setDate(nextRetryTime.getDate() + 1);
+        nextRetryTime.setHours(10, 0, 0, 0);
+      } else {
+        // If next retry is 10 AM and too close to appointment, try 6 PM same day
+        const sixPmSameDay = new Date(nextRetryTime);
+        sixPmSameDay.setHours(18, 0, 0, 0);
+        const timeDiffSixPm = Math.abs(appointmentTime.getTime() - sixPmSameDay.getTime());
+        const timeDiffHoursSixPm = timeDiffSixPm / (1000 * 60 * 60);
+        
+        if (timeDiffHoursSixPm >= 2) {
+          nextRetryTime = sixPmSameDay;
+        } else {
+          // Move to next day 10 AM
+          nextRetryTime.setDate(nextRetryTime.getDate() + 1);
+          nextRetryTime.setHours(10, 0, 0, 0);
+        }
+      }
+    }
+  }
+  
+  return nextRetryTime.toISOString();
 }
 
 async function findAttemptByCallId(callId) {
@@ -116,7 +181,7 @@ r.post('/retell/webhook', async (req, res) => {
     const c = evt.call || {};
     const callId = c.call_id || evt.call_id || 'unknown';
 
-    log.info('retell evt', { type, call_id: callId });
+    log.info('retell evt', evt || 'no evt');
 
     const attempt = await findAttemptByCallId(callId);
     if (!attempt) {
@@ -148,16 +213,11 @@ r.post('/retell/webhook', async (req, res) => {
         .toLowerCase();
 
       // Voicemail detection (PT/EN variants + Retell analysis)
-      const inVoicemail =
-        Boolean(c.call_analysis?.in_voicemail) ||
-        /voicemail|voice[- ]?mail|caixa postal|correio de voz|deixe sua mensagem|ap[oó]s o sinal|voymail/i.test(
-          transcript
-        ) ||
-        /not available|mismatched_reason.*not available/i.test(collected);
+      const inVoicemail = c.disconnection_reason === 'voicemail_reached';
 
       const NO_HUMAN =
         inVoicemail ||
-        /(no ?answer|no[_-]?pickup|didn'?t pick|missed|timeout|busy|failed|cancelled|declined|unreachable)/i.test(
+        /(no ?answer|no[_-]?pickup|didn'?t pick|missed|timeout|busy|failed|cancelled|declined|unreachable|voicemail_reached)/i.test(
           outcomeRaw
         );
       const DIVERGENT =
@@ -190,11 +250,11 @@ r.post('/retell/webhook', async (req, res) => {
       const lead = leadRows?.[0];
       if (!lead) return res.sendStatus(200);
 
-      if (NO_HUMAN) {
+      if (inVoicemail) {
         const nextN = (await maxAttemptNo(lead.id)) + 1;
 
         if (nextN <= 3) {
-          const nextAt = computeNextRetry(nextN, { inVoicemail });
+          const nextAt = await computeNextRetry(nextN, { inVoicemail, leadId: lead.id });
           await supa
             .from('leads')
             .update({ status: 'no_answer', next_retry_at: nextAt })

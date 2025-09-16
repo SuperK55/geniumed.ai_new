@@ -1,0 +1,1131 @@
+{
+    "conversation_flow_id": "conversation_flow_cadaa83784eb",
+    "version": 33,
+    "global_prompt": "Seu nome é Alice. Sempre muito carismática, com uma voz alegre e animada.\nApresente-se. Ao dizer nomes, fale-os com mais naturalidade em português.\n\n##Objetivo:\nConfirmar a identidade, entender a necessidade, sugerir o médico ideal e encerrar a consulta de forma educada e natural.\n\n## Princípios de Estilo\n- Seja conciso: Mantenha as respostas em menos de 2 frases, a menos que explique tópicos complexos.\n- Use SSML para ritmo (<break time='500ms'/>, fala mais lenta, ênfase).\n- Seja coloquial: Use linguagem natural, contrações e reconheça o que o interlocutor diz.\n- Seja empático: Demonstre compreensão pela situação do interlocutor.\n\n## Habilite transcrições parciais\nEmissão parcial: a cada 50–100 ms\nEstabilização: Baixa (ou Desligada) para que o texto flua rapidamente\n\n## Diretrizes de Resposta\nRetorne as datas em formato falado: Diga \"15 de janeiro\" e não \"15/01\".\nFaça uma pergunta de cada vez: Evite sobrecarregar o interlocutor com várias perguntas.\n\nConfirme a compreensão: Parafraseie informações importantes para o interlocutor.\nAo falar o número de telefone, transforme o formato da seguinte forma:\n- Insira formatos como 9132\n- Deve ser pronunciado como: \"nove um três dois\"\n- Importante: Não omita o espaço ao redor do hífen ao falar\n\nRegras:\n• Fale em tom calmo e positivo, usando frases curtas, e confirme a compreensão.\n• Se o paciente interromper, pare e responda.\n• Para pagamento, ofereça um link via WhatsApp (de preferência) ou SMS, conforme preferir.\n• Nunca invente fatos; use apenas variáveis ​​e funções. Contexto (se disponível):\n– Nome: {{name}}, Última mensagem do WhatsApp: {{phone_last4}}\n– Cidade: {{city}}, Especialidade: {{specialty}}, Motivo: {{reason}}\n– Médico sugerido: {{doctor_name}} ({{doctor_specialty}}), {{doctor_city}}. Telemedicina: {{telemedicine}}. Idiomas: {{doctor_languages}}. Foco: {{doctor_tags}}. Breve biografia: {{doctor_description}}. Honorários: {{price_first}}, retorno {{price_return}}.\nEncerramento: Após enviar o link de pagamento, explique que você pode enviar o recibo por WhatsApp. Se não pagar agora, ofereça-se para remarcar rapidamente.",
+    "nodes": [
+        {
+            "tool_id": "tool-1757295373150",
+            "name": "Check-identity",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757362744711",
+                    "id": "edge-1757330728173",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{result}}",
+                                "operator": "==",
+                                "right": "ok"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                }
+            ],
+            "id": "node-1757295380230",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "display_position": {
+                "x": 1099.0014182450577,
+                "y": 1223.0328574558982
+            },
+            "wait_for_result": true
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Ao apresentar um médico, use sempre duas partes principais: Autoridade e Escassez.\nAutoridade:\nApresente as credenciais e especialidades do médico em um tom profissional, mas acolhedor. Fale devagar (5% mais devagar), com ênfase em conquistas e reputação.\nFinalize esta parte com uma pergunta leve e envolvente para o usuário (por exemplo, \"Isso parece alinhado com o que você está procurando?\").\nEscassez:\nDestaque que a agenda do médico está muito cheia. Apresente uma disponibilidade realista (por exemplo, A primeira quarta-feira daqui a dois meses).\nSugira uma ação educadamente: \"Gostaria que eu reservasse uma vaga?\"\nUse SSML para ritmo (<break time='500ms'/>, fala mais lenta, ênfase).\nVocê também pode usar bases de conhecimento, pois há um fluxo de conversa completo para cada médico."
+            },
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": true
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757798419221",
+                    "id": "edge-1757356852686",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User feel it's too far away and can 't wait until that"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757800577312",
+                    "id": "edge-1757356871972",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User say can wait until that and  say \"Pode ser?\""
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757973600117",
+                    "id": "edge-1757356883874",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User say to make a reservation later anyway."
+                    }
+                }
+            ],
+            "id": "node-1757296784338",
+            "knowledge_base_ids": [
+                "knowledge_base_ee0b3888fd017604"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 1595.3329141592944,
+                "y": 655.4626588954545
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Perfeito, obrigado {{name}}. O que você está sentindo? Consegue me explicar melhor para eu direcionar para o médico com a especialidade que você precisa?\n\nApós a resposta do usuário:\n\"Ah, entendi. E em uma escala de 0 a 10, o quanto isso está te incomodando?\"\n\nEnquanto continua a conversa sem problemas, entenda o que o usuário precisa e o quão ocupado ele está.\nE você deve extrair {{specialty}} os desejos do usuário por meio de bases de conhecimento.\nUse SSML para ritmo (<break time='500ms'/>, fala mais lenta, ênfase)."
+            },
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": false
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757296784338",
+                    "id": "edge-1757298321223",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User say what he need and how busy it is"
+                    }
+                }
+            ],
+            "id": "node-1757298321223",
+            "knowledge_base_ids": [
+                "knowledge_base_1b372eddb81da5d0",
+                "knowledge_base_ee0b3888fd017604"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 726.5583130296576,
+                "y": 250.79337698794905
+            }
+        },
+        {
+            "name": "Goodbye_end",
+            "id": "node-1757330614671",
+            "type": "end",
+            "display_position": {
+                "x": 4425.53906798816,
+                "y": 3365.8494413453614
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Politely end the call"
+            }
+        },
+        {
+            "tool_id": "tool-1757332007477",
+            "instruction": {
+                "type": "prompt",
+                "text": "Define what to say when calling the function"
+            },
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1-mini",
+                "high_priority": true
+            },
+            "name": "Maybe Recommend Doctor",
+            "edges": [
+                {
+                    "id": "edge-1757370491609",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "After receive response"
+                    }
+                }
+            ],
+            "id": "node-1757332013159",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": true,
+            "display_position": {
+                "x": 1433.4857028322108,
+                "y": 300.3287653163158
+            },
+            "wait_for_result": true
+        },
+        {
+            "name": "mismatched_reason",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757295380230",
+                    "id": "edge-1757358405416",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "After extracting variables"
+                    }
+                }
+            ],
+            "variables": [
+                {
+                    "name": "mismatched_reason",
+                    "description": "Extract reason why the info is not correct",
+                    "type": "string",
+                    "choices": []
+                },
+                {
+                    "name": "lead_id",
+                    "description": "current {{lead_id}}",
+                    "type": "string",
+                    "choices": []
+                }
+            ],
+            "id": "node-1757358405416",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+                "x": 668.3825542636,
+                "y": 1001.130135874612
+            }
+        },
+        {
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757365240407",
+                    "id": "edge-1757365459207",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always->Extract_Variables"
+                    }
+                }
+            ],
+            "id": "node-1757361151618",
+            "type": "conversation",
+            "display_position": {
+                "x": 2561.2959103159,
+                "y": 513.4369670393966
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Perfeito. Vou te enviar um **link de pagamento seguro** para garantir a vaga.\nVocê prefere receber por **WhatsApp** ou **SMS**?\n\n"
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Parece que houve um desencontro de dados. Vou registrar como *lead divergente* para nossa equipe revisar.\nObrigado(a) e tenha um bom dia!"
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "id": "edge-1757362744711",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Goodbye_end(Ending)"
+                    }
+                }
+            ],
+            "id": "node-1757362744711",
+            "type": "conversation",
+            "display_position": {
+                "x": 1496.2478376552322,
+                "y": 1434.3422462070794
+            },
+            "skip_response_edge": {
+                "destination_node_id": "node-1757330614671",
+                "id": "edge-1757417266249",
+                "transition_condition": {
+                    "type": "prompt",
+                    "prompt": "Skip response"
+                }
+            }
+        },
+        {
+            "variables": [
+                {
+                    "name": "symptoms_or_need",
+                    "description": "Extract what the user is needed",
+                    "type": "string",
+                    "choices": []
+                },
+                {
+                    "name": "urgency",
+                    "description": "Extract how busy the user is",
+                    "type": "number",
+                    "choices": []
+                },
+                {
+                    "name": "{{specialty}}",
+                    "description": "Extract extract specialty the user desires through knowledge bases.",
+                    "type": "string",
+                    "choices": []
+                }
+            ],
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": true
+            },
+            "name": "Extract Variables",
+            "edges": [
+                {
+                    "id": "edge-1757370425714",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{doctor_name}}",
+                                "operator": "exists"
+                            }
+                        ],
+                        "operator": "||"
+                    }
+                },
+                {
+                    "id": "edge-1757594826893",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{doctor_name}}",
+                                "operator": "not_exist"
+                            }
+                        ],
+                        "operator": "||"
+                    }
+                }
+            ],
+            "id": "node-1757364403807",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+                "x": 1094.2307687063892,
+                "y": 195.0000012394436
+            }
+        },
+        {
+            "tool_id": "tool-1757365061137",
+            "instruction": {
+                "type": "prompt",
+                "text": "Define what to say when calling the function"
+            },
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": true
+            },
+            "name": "Create Payment Link",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757418992953",
+                    "id": "edge-1757366600226",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{preferred_channel}}",
+                                "operator": "==",
+                                "right": "whatsapp"
+                            }
+                        ],
+                        "operator": "||"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757419065849",
+                    "id": "edge-1757366631232",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{preferred_channel}}",
+                                "operator": "==",
+                                "right": "sms"
+                            }
+                        ],
+                        "operator": "||"
+                    }
+                }
+            ],
+            "id": "node-1757365066232",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": true,
+            "display_position": {
+                "x": 4601.725812072427,
+                "y": 517.1623720744399
+            },
+            "wait_for_result": true
+        },
+        {
+            "name": "Extract Variables",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757365623385",
+                    "id": "edge-1757365669871",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always->Save Preference"
+                    }
+                }
+            ],
+            "variables": [
+                {
+                    "name": "preferred_channel",
+                    "description": "whatsapp → synonyms: whatsapp, zap, aqui mesmo, mensagem\n\nsms → sms, texto",
+                    "type": "string",
+                    "choices": []
+                }
+            ],
+            "id": "node-1757365240407",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+                "x": 3310.0759916398606,
+                "y": 417.2822610463977
+            }
+        },
+        {
+            "tool_id": "tool-1757365620921",
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-5-mini",
+                "high_priority": true
+            },
+            "name": "Save Preference",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757365066232",
+                    "id": "edge-1757366272080",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always->Create Payment Link"
+                    }
+                }
+            ],
+            "id": "node-1757365623385",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "display_position": {
+                "x": 3959.2617562525347,
+                "y": 477.8371573911629
+            },
+            "wait_for_result": true
+        },
+        {
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757415852727",
+                    "id": "edge-1757415795656",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Extract Variable"
+                    }
+                }
+            ],
+            "id": "node-1757415795656",
+            "type": "conversation",
+            "display_position": {
+                "x": 3528.039117084243,
+                "y": 1212.828025085711
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Quando é mais conveniente retornar minha ligação?\nFale o dia e hora (ex.: \"2025-09-08 16:00\")."
+            }
+        },
+        {
+            "variables": [
+                {
+                    "name": "when_time_to",
+                    "description": "datetime/free text: you can parse server-side",
+                    "type": "string",
+                    "choices": []
+                }
+            ],
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": true
+            },
+            "name": "Extract Variables",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757416355505",
+                    "id": "edge-1757415852727",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "After Extract and then schedule call"
+                    }
+                }
+            ],
+            "id": "node-1757415852727",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+                "x": 4012.567031285437,
+                "y": 1305.4712038533166
+            }
+        },
+        {
+            "tool_id": "tool-1757416342856",
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": true
+            },
+            "name": "Schedule Call",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757418427896",
+                    "id": "edge-1757416439001",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{schedule_status}}",
+                                "operator": "==",
+                                "right": "ture"
+                            }
+                        ],
+                        "operator": "||"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757418427896",
+                    "id": "edge-1757418601464",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{schedule_status}}",
+                                "operator": "!=",
+                                "right": "ture"
+                            }
+                        ],
+                        "operator": "||"
+                    }
+                }
+            ],
+            "id": "node-1757416355505",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "display_position": {
+                "x": 4573.383920776483,
+                "y": 1585.4823274495918
+            },
+            "wait_for_result": true
+        },
+        {
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1757418427896",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Goodbye end"
+                    }
+                }
+            ],
+            "id": "node-1757418427896",
+            "type": "conversation",
+            "display_position": {
+                "x": 4988.371206463844,
+                "y": 1825.6413697243522
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Combinado! Te ligo de novo.\nObrigado!"
+            }
+        },
+        {
+            "name": "Tech_failure_fallback",
+            "edges": [
+                {
+                    "id": "edge-1757418644480",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User confirm date"
+                    }
+                }
+            ],
+            "id": "node-1757418644480",
+            "type": "conversation",
+            "display_position": {
+                "x": 4081.1606819454687,
+                "y": 1802.9539228637877
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Acabei de ter um problema técnico.\nPode repetir?"
+            }
+        },
+        {
+            "tool_id": "tool-1757418989577",
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-5-mini",
+                "high_priority": true
+            },
+            "name": "Send Link Wa",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757419090465",
+                    "id": "edge-1757478801091",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always confirm_sent"
+                    }
+                }
+            ],
+            "id": "node-1757418992953",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "display_position": {
+                "x": 5058.538072755247,
+                "y": 828.461087134228
+            },
+            "wait_for_result": true
+        },
+        {
+            "tool_id": "tool-1757419062296",
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-5-mini",
+                "high_priority": true
+            },
+            "name": "Send Link Sms",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757419090465",
+                    "id": "edge-1757478777804",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always confirm_sent"
+                    }
+                }
+            ],
+            "id": "node-1757419065849",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "display_position": {
+                "x": 4984.221443841414,
+                "y": 1058.8618059348996
+            },
+            "wait_for_result": true
+        },
+        {
+            "name": "Confirm_sent",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1757419090465",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Após o usuário se despedir"
+                    }
+                }
+            ],
+            "id": "node-1757419090465",
+            "type": "conversation",
+            "display_position": {
+                "x": 5484.823152998247,
+                "y": 1437.375161446293
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Acabei de te enviar o link. Você pode pagar quando quiser e me enviar o recibo por WhatsApp depois. Caso não haja resposta, o agendamento será cancelado automaticamente, ok?"
+            }
+        },
+        {
+            "finetune_conversation_examples": [],
+            "instruction": {
+                "type": "prompt",
+                "text": "Always deliver the script step by step, never all at once.\nUse a warm, natural tone (like a real call center professional).\nAfter each sentence, pause and wait for the user’s reply before moving forward.\nUse SSML for pacing (<break time='500ms'/>, slower speech, emphasis).\n\nFlow:\n\n1. Saudação calorosa:\n“Olá {{name}}, eu sou a Alice, assistente do {{doctor_name}}. <break time='400ms'/> Como você está hoje?”\n→ Stop and wait for user’s answer.\n\n2. Contextualização:\n“Que bom saber! Nós recebemos seu contato com interesse em agendar uma consulta conosco. ”\n\n<break time='500ms'/>\n\n“Isso mesmo?”\n→ Stop and wait for user’s answer.\n\n3. Convite para bate-papo:\n“Você pode me contar um pouquinho do que está acontecendo, só para eu entender melhor como podemos te ajudar?”\n→ Stop and listen. Don’t continue until user replies.\n\n4. Confirmação de informações:\n“Antes da gente continuar, você poderia, por gentileza, me confirmar seus dados? Seu nome é {{name }} e o final do seu celular é {{phone_last4}}, certo?”\n→ Stop and wait for confirmation.\n\nImportant:\n\n- Do not read the whole script in one go.\n\n- Always give the user a chance to answer before moving to the next line.\n\n- Keep a natural, patient rhythm (5% slower pace)."
+            },
+            "name": "Greeting_identity",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757298321223",
+                    "id": "edge-1757535785664",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "O usuário confirma que o nome e o número do WhatsApp estão corretos\n(ex: você está certo. Isso mesmo. OK. etc.)"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757358405416",
+                    "id": "edge-1757536029417",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "O usuário diz que não está correto.\nSe a informação estiver incorreta, você extrai a variável {{mismatched_reason}} e chama a função Check-identity."
+                    }
+                }
+            ],
+            "id": "node-1757535785664",
+            "type": "conversation",
+            "display_position": {
+                "x": 242.26253263452043,
+                "y": 427.3601342506285
+            }
+        },
+        {
+            "finetune_conversation_examples": [
+                {
+                    "transcript": [
+                        {
+                            "content": "É muito longe.",
+                            "role": "user"
+                        },
+                        {
+                            "content": "Entendo perfeitamente. Mas posso tentar marcar uma consulta para você na semana que vem ou na outra, o que você acha?",
+                            "role": "agent"
+                        }
+                    ],
+                    "id": "fe-1757798473894"
+                }
+            ],
+            "instruction": {
+                "type": "prompt",
+                "text": "Se o usuário responder que não pode esperar até a data disponível, gere uma oferta alternativa educada.\nUse um tom acolhedor e empático. Sugira tentar garantir um horário mais cedo, sem fazer promessas precipitadas.\n\nexemplo: \"Entendo perfeitamente. Mas eu posso tentar conseguir um encaixe para você já na próxima semana ou na seguinte, o que acha?\""
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757807618695",
+                    "id": "edge-1757798419221",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User agree with this suggestion"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757798764782",
+                    "id": "edge-1757798531102",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User don't agree with this suggestion"
+                    }
+                }
+            ],
+            "id": "node-1757798419221",
+            "type": "conversation",
+            "display_position": {
+                "x": 2087.1921216828273,
+                "y": 507.34019009086774
+            }
+        },
+        {
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1757798764782",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always good_bye"
+                    }
+                }
+            ],
+            "id": "node-1757798764782",
+            "type": "conversation",
+            "display_position": {
+                "x": 1926.993695978657,
+                "y": 2497.4317129335723
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Sem problemas, eu entendo perfeitamente. Estaremos disponíveis a qualquer momento caso mude de ideia no futuro. Desejamos a você uma recuperação tranquila e um ótimo dia."
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Forneça uma explicação clara e profissional do processo de consulta.\nUse um tom tranquilizador e confiante. Mencione a duração e {{price_first}} de forma transparente. Adicione SSML para o ritmo.\n\nExemplo:\n\"Ótimo. Deixe-me explicar como funciona o nosso serviço: uma consulta com {{doctor_name}} dura em média 1,5 hora, para que ele possa avaliar e discutir o seu caso com calma. A primeira consulta custa {{price_first}}.\nPosso confirmar a sua consulta ou tem alguma dúvida?\"\n\nUse SSML (pausas, ênfase, ritmo 5% mais lento).\nSe o usuário perguntar algo, responda com base em bases de conhecimento."
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757361151618",
+                    "id": "edge-1757800577312",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "O usuário concorda em agendar."
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757798764782",
+                    "id": "edge-1757801036672",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "O usuário não concorda com o agendamento."
+                    }
+                }
+            ],
+            "id": "node-1757800577312",
+            "knowledge_base_ids": [
+                "knowledge_base_ee0b3888fd017604"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 2178.227107835957,
+                "y": 1526.0980772842317
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Forneça uma explicação clara e profissional do processo de consulta.\nUse um tom tranquilizador e confiante. Mencione a duração e {{price_first}} de forma transparente. Adicione SSML para o ritmo.\n\nExemplo:\n\"Ótimo. Deixe-me explicar como funciona o nosso serviço: uma consulta com {{doctor_name}} dura em média 1,5 hora, para que ele possa avaliar e discutir o seu caso com calma. A primeira consulta custa {{price_first}}.\"\n\nUse SSML (pausas, ênfase, ritmo 5% mais lento).\nSe o usuário perguntar algo, responda com base em bases de conhecimento."
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757807838768",
+                    "id": "edge-1757807618695-0lghv3cch",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "When user understand all thing about this service"
+                    }
+                }
+            ],
+            "id": "node-1757807618695",
+            "knowledge_base_ids": [
+                "knowledge_base_ee0b3888fd017604"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 3233.847904288217,
+                "y": 2029.106035355117
+            }
+        },
+        {
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1757807838768",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Always good_bye"
+                    }
+                }
+            ],
+            "id": "node-1757807838768",
+            "type": "conversation",
+            "display_position": {
+                "x": 3695.113793485162,
+                "y": 2629.1361946900333
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Informaremos a programação possível em até 2 dias. Agradecemos o seu tempo!"
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Forneça uma explicação clara e profissional do processo de consulta.\nUse um tom tranquilizador e confiante. Mencione a duração e {{price_first}} de forma transparente. Adicione SSML para o ritmo.\n\nExemplo:\n\"Ótimo. Deixe-me explicar como funciona o nosso serviço: uma consulta com {{doctor_name}} dura em média 1,5 hora, para que ele possa avaliar e discutir o seu caso com calma. A primeira consulta custa {{price_first}}.\"\n\nUse SSML (pausas, ênfase, ritmo 5% mais lento).\nSe o usuário perguntar algo, responda com base em bases de conhecimento."
+            },
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757415795656",
+                    "id": "edge-1757973600117-peord9b48",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "When user understand all thing about this service"
+                    }
+                }
+            ],
+            "id": "node-1757973600117",
+            "knowledge_base_ids": [
+                "knowledge_base_ee0b3888fd017604"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 2820.3861600403593,
+                "y": 988.4147836877125
+            }
+        }
+    ],
+    "start_node_id": "node-1757535785664",
+    "start_speaker": "user",
+    "tools": [
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "lead_id": "{{lead_id}}",
+                "mismatched_reason": "{{mismatched_reason}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/check-identity",
+            "tool_id": "tool-1757295373150",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Check-identity",
+            "response_variables": {
+                "result": "result"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "lead_id": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "mismatched_reason": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "need": "{{symptoms_or_need}}",
+                "urgency": "{{urgency}}",
+                "specialty": "{{specialty}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/recommend_doctor",
+            "tool_id": "tool-1757332007477",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Maybe_recommend_doctor",
+            "response_variables": {
+                "doctor_id": "doctor.id",
+                "doctor_description": "doctor.description",
+                "telemedicine": "doctor.telemedicine",
+                "doctor_specialty": "doctor_specialty",
+                "doctor_tags": "doctor.tags",
+                "doctor_city": "doctor.city",
+                "doctor_languages": "doctor.languages",
+                "doctor_name": "doctor_name"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "args": {
+                        "type": "object",
+                        "description": "",
+                        "properties": {
+                            "need": {
+                                "type": "string",
+                                "description": ""
+                            },
+                            "urgency": {
+                                "type": "number",
+                                "description": ""
+                            },
+                            "specialty": {
+                                "type": "string",
+                                "description": ""
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "description": "Consulta com {{doctor_name}} ({{doctor_specialty}})",
+                "lead_id": "{{lead_id}}",
+                "amount": "{{price_first}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/create-payment-link",
+            "tool_id": "tool-1757365061137",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Create_payment_link",
+            "response_variables": {
+                "url": "url"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "lead_id": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "amount": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "lead_id": "{{lead_id}}",
+                "preferred_channel": "{{preferred_channel}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/set-communication-preference",
+            "tool_id": "tool-1757365620921",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Save_preference",
+            "response_variables": {
+                "ok": "ok"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "lead_id": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "preferred_channel": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "when_iso": "{{when_time_iso}}",
+                "lead_id": "{{lead_id}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/schedule-call",
+            "tool_id": "tool-1757416342856",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Schedule_call",
+            "response_variables": {
+                "schedule_status": "ok"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "args": {
+                        "type": "object",
+                        "description": "",
+                        "properties": {
+                            "when_time_iso": {
+                                "type": "string",
+                                "description": ""
+                            },
+                            "lead_id": {
+                                "type": "string",
+                                "description": ""
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "headers": {
+                "url": "payment_url",
+                "to": "{{phone}}"
+            },
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/send-payment-link",
+            "tool_id": "tool-1757418989577",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Send_link_WA",
+            "response_variables": {},
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {
+                "url": "{{payment_url}}",
+                "to": "{{phone}}"
+            },
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/send-payment-link",
+            "tool_id": "tool-1757419062296",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Send_link_SMS",
+            "response_variables": {},
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        }
+    ],
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4.1",
+        "high_priority": false
+    },
+    "knowledge_base_ids": [
+        "knowledge_base_ee0b3888fd017604",
+        "knowledge_base_1b372eddb81da5d0"
+    ],
+    "kb_config": {
+        "top_k": 3,
+        "filter_score": 0.6
+    },
+    "begin_tag_display_position": {
+        "x": -107.6403701710012,
+        "y": 528.0193936303396
+    },
+    "is_published": false
+}

@@ -3,8 +3,39 @@ import { bookAppointment } from '../services/appointments.js';
 import { stripe, currency } from '../lib/stripe.js';
 import { twilio } from '../lib/twilio.js';
 import { supa } from '../lib/supabase.js';
+import { env } from '../config/env.js';
+import Retell from 'retell-sdk';
 
 const r = Router();
+const client = new Retell({
+  apiKey: env.RETELL_API_KEY
+});
+
+r.get('/fn/get-conversation-flow', async (req, res) => {
+  try {
+    // Validate required environment variables
+    if (!env.RETELL_API_KEY) {
+      return res.status(500).json({ error: 'RETELL_API_KEY not configured' });
+    }
+    if (!env.CONVERSATION_FLOW_ID) {
+      return res.status(500).json({ error: 'CONVERSATION_FLOW_ID not configured' });
+    }
+
+    const conversationFlowResponse = await client.conversationFlow.retrieve(env.CONVERSATION_FLOW_ID);
+    res.json(conversationFlowResponse);
+  } catch (error) {
+    console.error('Error retrieving conversation flow:', error);
+    res.status(500).json({ 
+      error: 'Failed to retrieve conversation flow', 
+      details: error.message 
+    });
+  }
+});
+
+r.get('/fn/get-agent-out', async (req, res) => {
+  const agentResponse = await client.agent.retrieve(env.RETELL_AGENT_OUT);
+  res.json(agentResponse);
+});
 
 r.post('/fn/check-identity', async (req,res)=>{
   const { lead_id, mismatched_reason } = req.body.args || {};
@@ -29,9 +60,10 @@ r.post('/fn/create-payment-link', async (req,res)=>{
 });
 
 r.post('/fn/send-payment-link', async (req,res)=>{
-  const { to, url } = req.body.args || {};
-  // if(!to || !url) return res.status(400).json({ error:'to and url required' });
-  // await twilio.messages.create({ to, messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID, body: `Segue o link de pagamento seguro: ${url}` });
+  // const { to, url } = req.body.args || {};
+  // if(!to || !url) return res.status(400).jso/n({ error:'to and url required' });
+  // const msg = await twilio.messages.create({ to, from: env.TWILIO_FROM_NUMBER, body: `Segue o link de pagamento seguro: ${url}` });
+  // res.json({ sent:true, msg:msg?.body });
   res.json({ sent:true });
 });
 
@@ -60,8 +92,8 @@ r.post('/fn/set-communication-preference', async (req,res)=>{
 
 r.post('/fn/schedule-call', async (req,res)=>{
   const { lead_id, when_iso } = req.body.args || {};
-  if(!lead_id || !when_iso) return res.status(400).json({ error:'lead_id and when_iso required' });
-  await supa.from('leads').update({ status:'reschedule', next_retry_at: when_iso }).eq('id', lead_id);
+  // if(!lead_id || !when_iso) return res.status(400).json({ error:'lead_id and when_iso required' });
+  // await supa.from('leads').update({ status:'reschedule', next_retry_at: when_iso }).eq('id', lead_id);
   res.json({ ok:true });
 });
 
