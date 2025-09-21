@@ -1,0 +1,55 @@
+{
+    "channel": "voice",
+    "agent_name": "New Version",
+    "response_engine": {
+        "type": "conversation-flow",
+        "version": 57,
+        "conversation_flow_id": "conversation_flow_6710907e473e"
+    },
+    "webhook_url": "https://agent.geniumed.ai/retell/webhook",
+    "language": "pt-BR",
+    "opt_out_sensitive_data_storage": false,
+    "data_storage_setting": "everything",
+    "opt_in_signed_url": false,
+    "end_call_after_silence_ms": 62000,
+    "post_call_analysis_data": [
+        {
+            "type": "boolean",
+            "name": "2days_later",
+            "description": "Whether user agree we contact him 2days later"
+        }
+    ],
+    "version": 57,
+    "is_published": false,
+    "version_title": "",
+    "post_call_analysis_model": "gpt-4o-mini",
+    "pii_config": {
+        "mode": "post_call",
+        "categories": []
+    },
+    "voice_id": "11labs-Marissa",
+    "enable_backchannel": true,
+    "backchannel_frequency": 0.9,
+    "backchannel_words": [
+        "sim",
+        "aham",
+        "etc"
+    ],
+    "reminder_trigger_ms": 10000,
+    "reminder_max_count": 1,
+    "max_call_duration_ms": 1809000,
+    "interruption_sensitivity": 0.97,
+    "ambient_sound": "coffee-shop",
+    "normalize_for_speech": true,
+    "begin_message_delay_ms": 200,
+    "voicemail_option": {
+        "action": {
+            "type": "hangup"
+        }
+    },
+    "stt_mode": "fast",
+    "allow_user_dtmf": true,
+    "user_dtmf_options": {
+        "timeout_ms": 3500
+    }
+}

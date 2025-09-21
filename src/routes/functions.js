@@ -37,6 +37,22 @@ r.get('/fn/get-agent-out', async (req, res) => {
   res.json(agentResponse);
 });
 
+r.post('/fn/create-conversation-flow', async (req,res)=>{
+  const conversation_flow = req.body || {};
+  const response = await client.conversationFlow.create(
+    conversation_flow
+  );
+  res.json(response?.conversation_flow_id);
+});
+
+r.post('/fn/create-agent', async (req,res)=>{
+  const agent = req.body || {};
+  const response = await client.agent.create(
+    agent
+  );
+  res.json(response?.agent_id);
+});
+
 r.post('/fn/check-identity', async (req,res)=>{
   const { lead_id, mismatched_reason } = req.body.args || {};
   // TODO: compare with DB; return real result later

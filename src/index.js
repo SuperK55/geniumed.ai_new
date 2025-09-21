@@ -13,8 +13,8 @@ import './scheduler.js';
 import { rawBodySaver } from './middleware/rawBody.js';
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json({ type: '*/*', verify: rawBodySaver }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }));
+app.use(bodyParser.json({ type: '*/*', verify: rawBodySaver, limit: '1mb' }));
 app.use(cors());
 
 app.use(health);

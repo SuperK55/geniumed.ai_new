@@ -18,6 +18,22 @@ r.post('/lead/submit', async (req, res) => {
 
   const doc = await pickDoctorForLead({ city, need: reason, specialty });
   const doctorSpecialty = (doc?.specialty || doc?.specialties?.name || '') || '';
+  
+  // Calculate initial appointment date (1 month from now)
+  const now = new Date();
+  const initialAppointmentDate = new Date(now);
+  initialAppointmentDate.setMonth(initialAppointmentDate.getMonth() + 1);
+  
+  // Format in DD/MM style
+  const month = String(initialAppointmentDate.getMonth() + 1).padStart(2, '0'); // Add 1 because getMonth() is 0-based
+  const day = String(initialAppointmentDate.getDate()).padStart(2, '0');
+  const year = initialAppointmentDate.getFullYear();
+  
+  // Format based on whether it's in the same year
+  const appointmentDateOnly = now.getFullYear() === initialAppointmentDate.getFullYear() 
+    ? `${day}/${month}` // "15/11" (same year)
+    : `${day}/${month}/${year}`; // "15/01/2026" (different year)
+  
   const vars = {
     lead_id: leadRow.id,
     name: leadRow.name || '',
@@ -33,7 +49,8 @@ r.post('/lead/submit', async (req, res) => {
     doctor_tags: Array.isArray(doc?.tags) ? doc.tags.join(', ') : '',
     telemedicine: doc?.telemedicine ? 'true' : 'false',
     price_first: doc?.price_first != null ? String(doc.price_first) : '',
-    price_return: doc?.price_return != null ? String(doc.price_return) : ''
+    price_return: doc?.price_return != null ? String(doc.price_return) : '',
+    initial_appointment_date: appointmentDateOnly
   };
 
   try {
