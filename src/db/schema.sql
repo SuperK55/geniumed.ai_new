@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS call_attempts CASCADE;
 DROP TABLE IF EXISTS leads CASCADE;
 DROP TABLE IF EXISTS doctors CASCADE;
 DROP TABLE IF EXISTS specialties CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE specialties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -17,9 +18,25 @@ CREATE TABLE specialties (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Users table for authentication
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT DEFAULT 'admin-business' CHECK (role IN ('admin', 'admin-business')),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  last_login TIMESTAMPTZ
+);
+
 CREATE OR REPLACE FUNCTION trg_touch_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN NEW.updated_at := now(); RETURN NEW; END; $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER touch_users_updated_at
+BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE trg_touch_updated_at();
 
 CREATE TRIGGER touch_specialties_updated_at
 BEFORE UPDATE ON specialties FOR EACH ROW EXECUTE PROCEDURE trg_touch_updated_at();
@@ -104,6 +121,8 @@ CREATE INDEX IF NOT EXISTS idx_doctors_city     ON doctors (lower(city));
 CREATE INDEX IF NOT EXISTS idx_doctors_tags     ON doctors USING GIN (tags);
 CREATE INDEX IF NOT EXISTS idx_doctors_lang     ON doctors USING GIN (languages);
 CREATE INDEX IF NOT EXISTS idx_doctors_spec_id  ON doctors (specialty_id);
+CREATE INDEX IF NOT EXISTS idx_users_email      ON users(lower(email));
+CREATE INDEX IF NOT EXISTS idx_users_active     ON users(is_active);
 CREATE INDEX IF NOT EXISTS idx_leads_status     ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_next_retry ON leads(next_retry_at);
 CREATE INDEX IF NOT EXISTS idx_call_attempts_lead ON call_attempts(lead_id);

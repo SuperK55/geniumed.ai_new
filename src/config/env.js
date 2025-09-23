@@ -26,5 +26,8 @@ export const env = {
   MINDEE_API_KEY: process.env.MINDEE_API_KEY,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-  CURRENCY: (process.env.CURRENCY || 'BRL').toLowerCase()
+  CURRENCY: (process.env.CURRENCY || 'BRL').toLowerCase(),
+
+  // Authentication
+  JWT_SECRET: process.env.JWT_SECRET || 'secret'
 };

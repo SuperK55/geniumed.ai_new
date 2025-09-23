@@ -9,6 +9,7 @@ import retell from './routes/retell.js';
 import twilioRoutes from './routes/twilio.js';
 import stripeWebhook from './routes/stripe.js';
 import functions from './routes/functions.js';
+import auth from './routes/auth.js';
 import './scheduler.js';
 import { rawBodySaver } from './middleware/rawBody.js';
 
@@ -18,6 +19,7 @@ app.use(bodyParser.json({ type: '*/*', verify: rawBodySaver, limit: '1mb' }));
 app.use(cors());
 
 app.use(health);
+app.use(auth);
 app.use(lead);
 app.use(retell);
 app.use(twilioRoutes);

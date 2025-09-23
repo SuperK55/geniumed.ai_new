@@ -1,12 +1,11 @@
 {
-    "agent_id": "agent_fe69b631e3600243ee110eab98",
     "channel": "voice",
-    "last_modification_timestamp": 1757614572152,
-    "agent_name": "Conversation Flow Agent",
+    "last_modification_timestamp": 1758140990712,
+    "agent_name": "New Version",
     "response_engine": {
         "type": "conversation-flow",
-        "version": 13,
-        "conversation_flow_id": "conversation_flow_cadaa83784eb"
+        "version": 1,
+        "conversation_flow_id": "conversation_flow_6710907e473e"
     },
     "webhook_url": "https://agent.geniumed.ai/retell/webhook",
     "language": "pt-BR",
@@ -14,7 +13,14 @@
     "data_storage_setting": "everything",
     "opt_in_signed_url": false,
     "end_call_after_silence_ms": 62000,
-    "version": 13,
+    "post_call_analysis_data": [
+        {
+            "type": "boolean",
+            "name": "2days_later",
+            "description": "Whether user agree we contact him 2days later"
+        }
+    ],
+    "version": 1,
     "is_published": false,
     "version_title": "",
     "post_call_analysis_model": "gpt-4o-mini",
@@ -22,7 +28,7 @@
         "mode": "post_call",
         "categories": []
     },
-    "voice_id": "11labs-Marissa",
+    "voice_id": "11labs-Kate",
     "enable_backchannel": true,
     "backchannel_frequency": 0.9,
     "backchannel_words": [
