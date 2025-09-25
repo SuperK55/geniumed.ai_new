@@ -408,8 +408,7 @@ class AgentManager {
         office_address,
         city,
         state,
-        tags = [],
-        certifications = []
+        tags = []
       } = doctorData;
 
       // Validation
@@ -434,7 +433,6 @@ class AgentManager {
           phone_number,
           specialty,
           bio,
-          experience_years: experience_years ? parseInt(experience_years) : null,
           languages: Array.isArray(languages) ? languages : [languages],
           consultation_price: consultation_price ? parseFloat(consultation_price) : null,
           return_consultation_price: return_consultation_price ? parseFloat(return_consultation_price) : null,
@@ -446,8 +444,6 @@ class AgentManager {
           city,
           state,
           tags: Array.isArray(tags) ? tags : [],
-          certifications: Array.isArray(certifications) ? certifications : [],
-          specialty_id: specialtyData?.id,
           is_active: true
         })
         .select()
