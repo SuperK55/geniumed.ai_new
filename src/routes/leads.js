@@ -244,7 +244,7 @@ router.get('/lead/:id', async (req, res) => {
         *,
         agents(id, name),
         doctors(id, name, specialty),
-        users(id, name, business_name),
+        users(id, name),
         call_attempts(
           id,
           attempt_no,

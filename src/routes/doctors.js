@@ -26,9 +26,8 @@ const authenticateOwner = async (req, res, next) => {
     // Verify user exists and is active
     const { data: user, error } = await supa
       .from('users')
-      .select('id, role, business_name')
+      .select('*')
       .eq('id', decoded.id)
-      .eq('is_active', true)
       .single();
 
     if (error || !user) {
@@ -38,9 +37,17 @@ const authenticateOwner = async (req, res, next) => {
       });
     }
 
+    // Check if user is active (if column exists)
+    if (user.is_active === false) {
+      return res.status(401).json({
+        ok: false,
+        error: 'User account is inactive'
+      });
+    }
+
     req.ownerId = user.id;
     req.ownerRole = user.role;
-    req.businessName = user.business_name;
+    req.businessName = user.name; // Use name instead of business_name
     next();
 
   } catch (error) {

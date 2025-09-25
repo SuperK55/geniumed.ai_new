@@ -17,7 +17,7 @@ class AgentManager {
       // Get owner details
       const { data: owner, error: ownerError } = await supa
         .from('users')
-        .select('id, name, business_name')
+        .select('id, name')
         .eq('id', ownerId)
         .single();
 
@@ -55,7 +55,7 @@ class AgentManager {
       });
 
       const conversationFlow = await this.generateConversationFlow(owner, conversationFlowTemplate, {
-        business_name: owner.business_name,
+        business_name: owner.name,
         ...custom_variables
       });
 
@@ -74,7 +74,7 @@ class AgentManager {
         .insert({
           owner_id: ownerId,
           name: name.trim(),
-          description: description || `AI agent for ${owner.business_name}`,
+          description: description || `AI agent for ${owner.name}`,
           specialties: Array.isArray(specialties) ? specialties : [],
           target_audience,
           retell_agent_id: agentResponse.agent_id,
@@ -109,7 +109,7 @@ class AgentManager {
           .eq('id', ownerId);
       }
 
-      log.info(`Created agent ${dbAgent.id} for owner ${ownerId} (${owner.business_name})`);
+      log.info(`Created agent ${dbAgent.id} for owner ${ownerId} (${owner.name})`);
       return dbAgent;
 
     } catch (error) {
@@ -566,7 +566,7 @@ class AgentManager {
     // Replace template variables
     const variables = {
       timestamp: Date.now(),
-      agent_name: options.name || `${owner.business_name} Assistant`,
+      agent_name: options.name || `${owner.name} Assistant`,
       conversation_flow_id: 'PLACEHOLDER', // Will be replaced after flow creation
       webhook_url: `${env.APP_BASE_URL}/retell/webhook`,
       language: options.language || 'pt-BR',
@@ -587,7 +587,7 @@ class AgentManager {
     // Replace template variables
     const variables = {
       assistant_name: 'Clara',
-      business_name: owner.business_name || 'Nossa Clínica',
+      business_name: owner.name || 'Nossa Clínica',
       webhook_base_url: env.APP_BASE_URL,
       // Include any custom variables passed in options
       ...options
