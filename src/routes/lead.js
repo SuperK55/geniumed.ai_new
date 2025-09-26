@@ -17,7 +17,7 @@ r.post('/lead/submit', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   const doc = await pickDoctorForLead({ city, need: reason, specialty });
-  const doctorSpecialty = (doc?.specialty || doc?.specialties?.name || '') || '';
+  const doctorSpecialty = (doc?.specialty || '') || '';
   
   // Calculate initial appointment date (1 month from now)
   const now = new Date();
@@ -44,12 +44,12 @@ r.post('/lead/submit', async (req, res) => {
     doctor_name: doc?.name || '',
     doctor_specialty: doctorSpecialty || '',
     doctor_city: doc?.city || '',
-    doctor_description: doc?.description || '',
+    doctor_description: doc?.bio || '',
     doctor_languages: Array.isArray(doc?.languages) ? doc.languages.join(', ') : '',
     doctor_tags: Array.isArray(doc?.tags) ? doc.tags.join(', ') : '',
-    telemedicine: doc?.telemedicine ? 'true' : 'false',
-    price_first: doc?.price_first != null ? String(doc.price_first) : '',
-    price_return: doc?.price_return != null ? String(doc.price_return) : '',
+    telemedicine: doc?.telemedicine_available ? 'true' : 'false',
+    price_first: doc?.consultation_price != null ? String(doc.consultation_price) : '',
+    price_return: doc?.return_consultation_price != null ? String(doc.return_consultation_price) : '',
     initial_appointment_date: appointmentDateOnly
   };
 

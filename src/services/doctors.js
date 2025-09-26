@@ -2,13 +2,13 @@ import { supa } from '../lib/supabase.js';
 
 export function scoreDoctor(doc, p){
   let score=0;
-  const specName = (doc.specialty || doc.specialties?.name || '').toLowerCase();
+  const specName = (doc.specialty || '').toLowerCase();
   if(p.specialty && specName.includes(String(p.specialty).toLowerCase())) score+=4;
   if(p.city && doc.city && doc.city.toLowerCase()===String(p.city).toLowerCase()) score+=2;
   if(p.language && Array.isArray(doc.languages) && doc.languages.some(l=>String(l).toLowerCase().startsWith(String(p.language).toLowerCase()))) score+=2;
   if(p.need){
     const toks = String(p.need).toLowerCase().split(/[^a-zá-ú0-9]+/i).filter(Boolean);
-    const hay = new Set([...(doc.tags||[]), ...((doc.specialties?.tags)||[]), ...((doc.specialties?.synonyms)||[])]
+    const hay = new Set([...(doc.tags||[])]
       .map(t=>String(t).toLowerCase()));
     if(toks.some(t=>hay.has(t))) score+=3;
   }
@@ -18,7 +18,7 @@ export function scoreDoctor(doc, p){
 export async function pickDoctorForLead(p){
   const { data, error } = await supa
     .from('doctors')
-    .select('id,name,specialty,city,languages,tags,description,telemedicine,specialty_id,price_first,price_return,specialties(name,tags,synonyms)')
+    .select('id,name,specialty,city,languages,tags,bio,telemedicine_available,consultation_price,return_consultation_price,consultation_duration,office_address,state')
     .eq('is_active', true)
     .limit(200);
   if(error) throw new Error(error.message);

@@ -4,7 +4,8 @@ import bodyParser from 'body-parser';
 import { env } from './config/env.js';
 import { log } from './config/logger.js';
 import health from './routes/health.js';
-import leads from './routes/leads.js';
+// import leads from './routes/leads.js';
+import lead from './routes/lead.js';
 import doctors from './routes/doctors.js';
 import retell from './routes/retell.js';
 import twilioRoutes from './routes/twilio.js';
@@ -21,7 +22,7 @@ app.use(cors());
 
 app.use(health);
 app.use(auth);
-app.use(leads);
+app.use(lead);
 app.use(doctors);
 app.use(retell);
 app.use(twilioRoutes);

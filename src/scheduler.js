@@ -17,13 +17,13 @@ cron.schedule('*/10 * * * *', async () => {
     const doc = await pickDoctorForLead({ city: lead.city, need: lead.reason, specialty: lead.specialty });
     const vars = {
       lead_id: lead.id, name: lead.name, city: lead.city || '', specialty: lead.specialty || '', reason: lead.reason || '',
-      doctor_id: doc?.id || '', doctor_name: doc?.name || '', doctor_specialty: doc?.specialty || doc?.specialties?.name || '',
-      doctor_city: doc?.city || '', doctor_description: doc?.description || '',
+      doctor_id: doc?.id || '', doctor_name: doc?.name || '', doctor_specialty: doc?.specialty || '',
+      doctor_city: doc?.city || '', doctor_description: doc?.bio || '',
       doctor_languages: Array.isArray(doc?.languages) ? doc.languages.join(', ') : '',
       doctor_tags: Array.isArray(doc?.tags) ? doc.tags.join(', ') : '',
-      telemedicine: doc?.telemedicine ? 'true' : 'false',
-      price_first: doc?.price_first != null ? String(doc.price_first) : '',
-      price_return: doc?.price_return != null ? String(doc.price_return) : ''
+      telemedicine: doc?.telemedicine_available ? 'true' : 'false',
+      price_first: doc?.consultation_price != null ? String(doc.consultation_price) : '',
+      price_return: doc?.return_consultation_price != null ? String(doc.return_consultation_price) : ''
     };
     try {
       const resp = await dialOutbound({ to: lead.phone, vars });

@@ -222,30 +222,31 @@ router.delete('/doctors/:doctorId', authenticateOwner, async (req, res) => {
       });
     }
 
-    // Deactivate doctor
+    // Permanently delete doctor from database
     const { error: doctorError } = await supa
       .from('doctors')
-      .update({ is_active: false })
+      .delete()
       .eq('id', doctorId);
 
     if (doctorError) {
-      log.error('Deactivate doctor error:', doctorError);
+      log.error('Delete doctor error:', doctorError);
       return res.status(500).json({
         ok: false,
-        error: 'Failed to deactivate doctor'
+        error: 'Failed to delete doctor'
       });
     }
 
+    log.info(`Permanently deleted doctor ${doctorId} for owner ${req.ownerId}`);
     res.json({
       ok: true,
-      message: `Doctor ${existingDoctor.name} deactivated successfully`
+      message: `Doctor ${existingDoctor.name} permanently deleted`
     });
 
   } catch (error) {
     log.error('Delete doctor error:', error);
     res.status(500).json({
       ok: false,
-      error: 'Failed to deactivate doctor'
+      error: 'Failed to delete doctor'
     });
   }
 });

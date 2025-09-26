@@ -117,20 +117,20 @@ r.post('/fn/recommend_doctor', async (req,res)=>{
   const { city, need, specialty, language } = req.body.args || {};
   const { data, error } = await supa
     .from('doctors')
-    .select('id,name,specialty,city,languages,tags,description,telemedicine,specialty_id,specialties(name,tags,synonyms)')
+    .select('id,name,specialty,city,languages,tags,bio,telemedicine_available,consultation_price,return_consultation_price,consultation_duration,office_address,state')
     .eq('is_active', true)
     .limit(200);
   if(error) return res.status(500).json({ error:error.message });
 
   function score(doc){
     let s=0;
-    const specName = (doc.specialty || doc.specialties?.name || '').toLowerCase();
+    const specName = (doc.specialty || '').toLowerCase();
     if (specialty && specName.includes(String(specialty).toLowerCase())) s += 4;
     if (city && doc.city && doc.city.toLowerCase() === String(city).toLowerCase()) s += 2;
     if (language && Array.isArray(doc.languages) && doc.languages.some(l=>String(l).toLowerCase().startsWith(String(language).toLowerCase()))) s += 2;
     if (need) {
       const toks = String(need).toLowerCase().split(/[^a-zá-ú0-9]+/i).filter(Boolean);
-      const hay = new Set([...(doc.tags||[]), ...((doc.specialties?.tags)||[]), ...((doc.specialties?.synonyms)||[])]
+      const hay = new Set([...(doc.tags||[])]
         .map(t=>String(t).toLowerCase()));
       if (toks.some(t => hay.has(t))) s += 3;
     }
@@ -143,10 +143,11 @@ r.post('/fn/recommend_doctor', async (req,res)=>{
   const top = ranked[0].d;
   res.json({ ok:true, doctor: {
     id: top.id, name: top.name,
-    specialty: top.specialty || top.specialties?.name || null,
+    specialty: top.specialty || null,
     city: top.city, languages: top.languages,
-    telemedicine: top.telemedicine, tags: top.tags, description: top.description,
-    specialty_id: top.specialty_id
+    telemedicine_available: top.telemedicine_available, tags: top.tags, bio: top.bio,
+    consultation_price: top.consultation_price, return_consultation_price: top.return_consultation_price,
+    consultation_duration: top.consultation_duration, office_address: top.office_address, state: top.state
   }});
 });
 
