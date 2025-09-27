@@ -267,13 +267,15 @@ router.post('/agents', authenticateOwner, async (req, res) => {
       message: 'Agent created successfully',
       agent: {
         id: newAgent.id,
-        name: newAgent.name,
-        description: newAgent.description,
-        specialties: newAgent.specialties,
-        target_audience: newAgent.target_audience,
+        agent_name: newAgent.agent_name,
         language: newAgent.language,
         voice_id: newAgent.voice_id,
-        is_active: newAgent.is_active
+        is_active: newAgent.is_active,
+        // Additional conversation control fields
+        agent_role: newAgent.agent_role,
+        service_description: newAgent.service_description,
+        assistant_name: newAgent.assistant_name,
+        script: newAgent.script
       }
     });
 

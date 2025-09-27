@@ -26,18 +26,20 @@ class AgentManager {
       }
 
       const {
-        name,
-        description,
-        specialties = [],
-        target_audience = 'general',
+        agent_name,
         language = 'pt-BR',
         voice_id = '11labs-Kate',
         ambient_sound = 'coffee-shop',
-        custom_variables = {}
+        custom_variables = {},
+        // Additional conversation control fields
+        agent_role,
+        service_description,
+        assistant_name,
+        script = {}
       } = agentData;
 
       // Validation
-      if (!name) {
+      if (!agent_name) {
         throw new Error('Agent name is required');
       }
 
@@ -47,7 +49,7 @@ class AgentManager {
 
       // Generate agent configuration
       const agentConfig = await this.generateAgentConfig(owner, agentTemplate, {
-        name,
+        agent_name,
         language,
         voice_id,
         ambient_sound,
@@ -73,17 +75,16 @@ class AgentManager {
         .from('agents')
         .insert({
           owner_id: ownerId,
-          name: name.trim(),
-          description: description || `AI agent for ${owner.name}`,
-          specialties: Array.isArray(specialties) ? specialties : [],
-          target_audience,
+          agent_name: agent_name.trim(),
+          agent_role: agent_role || 'Medical Assistant',
+          service_description: service_description || `AI agent for ${owner.name}`,
+          assistant_name: assistant_name || 'Clara',
+          script: script,
           retell_agent_id: agentResponse.agent_id,
           conversation_flow_id: conversationFlowResponse.conversation_flow_id,
           language,
           voice_id,
           ambient_sound,
-          agent_config: agentConfig,
-          conversation_flow: conversationFlow,
           custom_variables,
           is_active: true,
           is_published: false
@@ -245,10 +246,15 @@ class AgentManager {
         doctor_address: doctor.office_address || '',
         doctor_city: doctor.city || '',
         doctor_tags: doctor.tags?.join(', ') || '',
-        agent_name: agent.name,
-        agent_description: agent.description || '',
-        assistant_name: 'Clara', // Default assistant name
+        agent_name: agent.agent_name,
+        agent_role: agent.agent_role || 'Medical Assistant',
+        service_description: agent.service_description || '',
+        assistant_name: agent.assistant_name || 'Clara',
         webhook_base_url: env.APP_BASE_URL,
+        // Include script components
+        script_greeting: agent.script?.greeting || 'Olá! Como posso ajudá-lo hoje?',
+        script_service_description: agent.script?.service_description || agent.service_description || '',
+        script_availability: agent.script?.availability || 'Estamos disponíveis de segunda a sexta, das 8h às 18h.',
         // Include agent's custom variables
         ...agent.custom_variables
       };

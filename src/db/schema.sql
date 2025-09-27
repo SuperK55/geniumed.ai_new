@@ -74,13 +74,11 @@ CREATE TABLE doctors (
   
   -- Professional tags and specializations
   tags TEXT[],
-  certifications TEXT[],
   
   -- System fields
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  specialty_id UUID REFERENCES specialties(id) ON UPDATE CASCADE ON DELETE SET NULL
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Agents table - Business-level AI agents (owned by business owners)
@@ -89,12 +87,15 @@ CREATE TABLE agents (
   owner_id UUID REFERENCES users(id) ON DELETE CASCADE, -- Which business owner owns this agent
   
   -- Agent identification
-  name TEXT NOT NULL,
-  description TEXT,
+  agent_name TEXT NOT NULL, -- Custom agent name for conversations (primary identifier)
   
-  -- Agent purpose and specialization
-  specialties TEXT[], -- Which specialties this agent can handle (optional)
-  target_audience TEXT, -- 'general', 'children', 'elderly', etc.
+  -- Conversation control fields
+  agent_role TEXT, -- Role description (e.g., "Medical Assistant", "Receptionist")
+  service_description TEXT, -- Description of services offered
+  assistant_name TEXT, -- Name of the assistant (e.g., "Clara", "Maria")
+  
+  -- Script components
+  script JSONB DEFAULT '{}'::jsonb, -- Contains greeting, service_description, availability
   
   -- Retell AI configuration
   retell_agent_id TEXT UNIQUE, -- Retell AI agent ID
@@ -105,15 +106,8 @@ CREATE TABLE agents (
   voice_id TEXT DEFAULT '11labs-Kate',
   ambient_sound TEXT DEFAULT 'coffee-shop',
   
-  -- Agent behavior configuration
-  agent_config JSONB DEFAULT '{}'::jsonb,
-  conversation_flow JSONB DEFAULT '{}'::jsonb,
-  custom_variables JSONB DEFAULT '{}'::jsonb, -- Custom variables for this agent
-  
-  -- Agent performance
-  total_calls INTEGER DEFAULT 0,
-  successful_calls INTEGER DEFAULT 0,
-  average_call_duration INTEGER DEFAULT 0, -- seconds
+  -- Custom variables for this agent
+  custom_variables JSONB DEFAULT '{}'::jsonb,
   
   -- Status
   is_active BOOLEAN DEFAULT true,
