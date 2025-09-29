@@ -15,10 +15,60 @@ export function verifyRetellSignature(rawBody, signatureHeader){
 }
 
 export async function retellCreatePhoneCall(opts){
-  const r = await client.call.createPhoneCall({
-    to_number: opts.to_number,
-    from_number: opts.from_number,
-    retell_llm_dynamic_variables: opts.retell_llm_dynamic_variables
-  });
-  return r;
+  try {
+    // Validate required parameters
+    if (!opts.to_number && !opts.customer_number) {
+      throw new Error('Phone number (to_number or customer_number) is required');
+    }
+
+    if (!env.RETELL_FROM_NUMBER && !opts.from_number) {
+      throw new Error('From number is required (set RETELL_FROM_NUMBER env var or provide from_number)');
+    }
+
+    if (!opts.agent_id) {
+      throw new Error('Agent ID is required for outbound calls');
+    }
+
+    const callParams = {
+      to_number: opts.to_number || opts.customer_number,
+      from_number: opts.from_number || env.RETELL_FROM_NUMBER,
+      agent_id: opts.agent_id,
+      retell_llm_dynamic_variables: opts.retell_llm_dynamic_variables || {}
+    };
+
+    // Add metadata if provided
+    if (opts.metadata) {
+      callParams.metadata = opts.metadata;
+    }
+
+    console.log('Making Retell call with params:', {
+      to_number: callParams.to_number,
+      from_number: callParams.from_number,
+      agent_id: callParams.agent_id,
+      has_variables: Object.keys(callParams.retell_llm_dynamic_variables).length > 0
+    });
+
+    const r = await client.call.createPhoneCall(callParams);
+    return r;
+  } catch (error) {
+    console.error('Retell call creation error:', error);
+    throw new Error(`Failed to create Retell call: ${error.message}`);
+  }
+}
+
+export async function retellDeleteAgent(agentId){
+  try {
+    if (!agentId) {
+      throw new Error('Agent ID is required for deletion');
+    }
+
+    console.log('Deleting Retell agent:', agentId);
+
+    const response = await client.agent.delete(agentId);
+    console.log('Retell agent deleted successfully:', agentId);
+    return response;
+  } catch (error) {
+    console.error('Retell agent deletion error:', error);
+    throw new Error(`Failed to delete Retell agent: ${error.message}`);
+  }
 }

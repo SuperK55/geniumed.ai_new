@@ -4,7 +4,7 @@
     "agent_name": "{{agent_name}}",
     "response_engine": {
         "type": "conversation-flow",
-        "version": 1,
+        "version": 0,
         "conversation_flow_id": "{{conversation_flow_id}}"
     },
     "webhook_url": "{{webhook_url}}",
@@ -30,7 +30,7 @@
             "description": "How well the doctor specialty matches user needs"
         }
     ],
-    "version": 1,
+    "version": 0,
     "is_published": false,
     "version_title": "{{version_title}}",
     "post_call_analysis_model": "gpt-4o-mini",

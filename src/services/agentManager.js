@@ -3,6 +3,7 @@ import { retellCreatePhoneCall } from '../lib/retell.js';
 import { Retell } from 'retell-sdk';
 import { env } from '../config/env.js';
 import { log } from '../config/logger.js';
+import { pickDoctorForLead } from './doctors.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -33,7 +34,6 @@ class AgentManager {
         custom_variables = {},
         // Additional conversation control fields
         agent_role,
-        service_description,
         assistant_name,
         script = {}
       } = agentData;
@@ -77,7 +77,6 @@ class AgentManager {
           owner_id: ownerId,
           agent_name: agent_name.trim(),
           agent_role: agent_role || 'Medical Assistant',
-          service_description: service_description || `AI agent for ${owner.name}`,
           assistant_name: assistant_name || 'Clara',
           script: script,
           retell_agent_id: agentResponse.agent_id,
@@ -122,7 +121,7 @@ class AgentManager {
   /**
    * Find the best doctor and agent for a lead based on owner's selection
    */
-  async findDoctorAndAgentForLead(lead) {
+  async findDoctorAndAgentForLead(lead, specificAgentId = null) {
     try {
       let whereClause = {};
 
@@ -131,48 +130,36 @@ class AgentManager {
         whereClause.owner_id = lead.owner_id;
       }
 
-      // First, try to find a doctor with matching specialty
-      const { data: doctors, error: doctorError } = await supa
-        .from('doctors')
-        .select('*')
-        .match({
-          ...whereClause,
-          specialty: lead.specialty,
-          is_active: true
-        })
-        .order('created_at', { ascending: true });
-
-      if (doctorError) {
-        throw new Error(`Doctor query error: ${doctorError.message}`);
-      }
-
-      let selectedDoctor = doctors?.[0]; // Get first available doctor with matching specialty
-
-      // If no specific specialty match, try to find a general medicine doctor
-      if (!selectedDoctor && lead.specialty !== 'Internal Medicine') {
-        const { data: generalDoctors, error: generalError } = await supa
-          .from('doctors')
-          .select('*')
-          .match({
-            ...whereClause,
-            specialty: 'Internal Medicine',
-            is_active: true
-          })
-          .limit(1);
-
-        if (!generalError && generalDoctors?.length > 0) {
-          selectedDoctor = generalDoctors[0];
-        }
-      }
+      // Use the sophisticated doctor selection algorithm
+      const selectedDoctor = await pickDoctorForLead({
+        specialty: lead.specialty,
+        city: lead.city,
+        language: lead.preferred_language,
+        need: lead.reason
+      }, lead.owner_id);
 
       if (!selectedDoctor) {
-        throw new Error('No available doctor found for this specialty');
+        throw new Error('No available doctor found for this lead');
       }
 
       // Get owner's selected agent (use default or find suitable agent)
       let selectedAgent = null;
 
-      if (lead.owner_id) {
+      // If specific agent ID provided (for testing), use that agent
+      if (specificAgentId) {
+        const { data: specificAgent, error: specificAgentError } = await supa
+          .from('agents')
+          .select('*')
+          .eq('id', specificAgentId)
+          .eq('is_active', true)
+          .single();
+
+        if (!specificAgentError && specificAgent) {
+          selectedAgent = specificAgent;
+        } else {
+          throw new Error(`Test agent ${specificAgentId} not found or inactive`);
+        }
+      } else if (lead.owner_id) {
         // Try to get owner's default agent first
         const { data: owner, error: ownerError } = await supa
           .from('users')
@@ -232,31 +219,35 @@ class AgentManager {
    */
   async assignDoctorAndAgentToLead(leadId, doctor, agent) {
     try {
-      // Generate dynamic variables for the agent
+      // Generate dynamic variables for the agent and ensure all values are strings
       const agentVariables = {
-        doctor_name: doctor.name,
-        doctor_specialty: doctor.specialty,
-        doctor_bio: doctor.bio || `Especialista em ${doctor.specialty}`,
-        doctor_languages: doctor.languages?.join(', ') || 'Português',
+        doctor_name: String(doctor.name || ''),
+        doctor_specialty: String(doctor.specialty || ''),
+        doctor_bio: String(doctor.bio || `Especialista em ${doctor.specialty}`),
+        doctor_languages: String(doctor.languages?.join(', ') || 'Português'),
         consultation_price: doctor.consultation_price ? `R$ ${doctor.consultation_price}` : 'Consulte',
         return_consultation_price: doctor.return_consultation_price ? `R$ ${doctor.return_consultation_price}` : 'Consulte',
-        consultation_duration: doctor.consultation_duration || 90,
+        consultation_duration: String(doctor.consultation_duration || 90),
         telemedicine_available: doctor.telemedicine_available ? 'Sim' : 'Não',
-        doctor_phone: doctor.phone_number || '',
-        doctor_address: doctor.office_address || '',
-        doctor_city: doctor.city || '',
-        doctor_tags: doctor.tags?.join(', ') || '',
-        agent_name: agent.agent_name,
-        agent_role: agent.agent_role || 'Medical Assistant',
-        service_description: agent.service_description || '',
-        assistant_name: agent.assistant_name || 'Clara',
-        webhook_base_url: env.APP_BASE_URL,
+        doctor_phone: String(doctor.phone_number || ''),
+        doctor_address: String(doctor.office_address || ''),
+        doctor_city: String(doctor.city || ''),
+        doctor_tags: String(doctor.tags?.join(', ') || ''),
+        agent_name: String(agent.agent_name || ''),
+        agent_role: String(agent.agent_role || 'Medical Assistant'),
+        assistant_name: String(agent.assistant_name || 'Clara'),
+        webhook_base_url: String(env.APP_BASE_URL || ''),
         // Include script components
-        script_greeting: agent.script?.greeting || 'Olá! Como posso ajudá-lo hoje?',
-        script_service_description: agent.script?.service_description || agent.service_description || '',
-        script_availability: agent.script?.availability || 'Estamos disponíveis de segunda a sexta, das 8h às 18h.',
-        // Include agent's custom variables
-        ...agent.custom_variables
+        script_greeting: String(agent.script?.greeting || 'Olá! Como posso ajudá-lo hoje?'),
+        script_service_description: String(agent.script?.service_description || ''),
+        script_availability: String(agent.script?.availability || 'Estamos disponíveis de segunda a sexta, das 8h às 18h.'),
+        // Include agent's custom variables (convert to strings)
+        ...(agent.custom_variables ? Object.fromEntries(
+          Object.entries(agent.custom_variables).map(([key, value]) => [
+            key, 
+            value !== null && value !== undefined ? String(value) : ''
+          ])
+        ) : {})
       };
 
       // Update lead with assignment
@@ -303,24 +294,45 @@ class AgentManager {
         throw new Error('Agent not found');
       }
 
-      // Merge lead data with agent variables
+      // Merge lead data with agent variables and ensure all values are strings
       const callVariables = {
         ...lead.agent_variables,
-        lead_id: lead.id,
-        name: lead.name,
-        phone: lead.phone,
-        phone_last4: lead.phone.slice(-4),
-        city: lead.city || '',
-        specialty: lead.specialty || '',
-        reason: lead.reason || '',
-        urgency_level: lead.urgency_level || 1,
-        preferred_language: lead.preferred_language || 'Português'
+        lead_id: String(lead.id),
+        name: String(lead.name || ''),
+        phone: String(lead.phone || ''),
+        phone_last4: String(lead.phone || '').slice(-4),
+        city: String(lead.city || ''),
+        specialty: String(lead.specialty || ''),
+        reason: String(lead.reason || ''),
+        urgency_level: String(lead.urgency_level || 1),
+        preferred_language: String(lead.preferred_language || 'Português')
       };
+
+      // Ensure all agent_variables are also strings
+      if (lead.agent_variables) {
+        Object.keys(lead.agent_variables).forEach(key => {
+          if (lead.agent_variables[key] !== null && lead.agent_variables[key] !== undefined) {
+            callVariables[key] = String(lead.agent_variables[key]);
+          }
+        });
+      }
+
+      // Debug: Log the variables being sent
+      console.log('Call variables being sent to Retell:', JSON.stringify(callVariables, null, 2));
+
+      // Validate required fields
+      if (!agent.retell_agent_id) {
+        throw new Error('Agent does not have a valid Retell agent ID');
+      }
+      
+      if (!lead.phone) {
+        throw new Error('Lead phone number is required');
+      }
 
       // Make the call using Retell
       const callResponse = await retellCreatePhoneCall({
         agent_id: agent.retell_agent_id,
-        customer_number: lead.phone,
+        to_number: lead.phone,
         customer_name: lead.name,
         metadata: callVariables,
         retell_llm_dynamic_variables: callVariables

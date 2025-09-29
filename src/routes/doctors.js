@@ -395,54 +395,6 @@ router.put('/agents/:agentId', authenticateOwner, async (req, res) => {
   }
 });
 
-// Delete (deactivate) an agent
-router.delete('/agents/:agentId', authenticateOwner, async (req, res) => {
-  try {
-    const { agentId } = req.params;
-
-    // Verify agent belongs to this owner
-    const { data: existingAgent, error: checkError } = await supa
-      .from('agents')
-      .select('id, name')
-      .eq('id', agentId)
-      .eq('owner_id', req.ownerId)
-      .single();
-
-    if (checkError || !existingAgent) {
-      return res.status(404).json({
-        ok: false,
-        error: 'Agent not found'
-      });
-    }
-
-    // Deactivate agent
-    const { error: updateError } = await supa
-      .from('agents')
-      .update({ is_active: false })
-      .eq('id', agentId);
-
-    if (updateError) {
-      log.error('Deactivate agent error:', updateError);
-      return res.status(500).json({
-        ok: false,
-        error: 'Failed to deactivate agent'
-      });
-    }
-
-    res.json({
-      ok: true,
-      message: `Agent ${existingAgent.name} deactivated successfully`
-    });
-
-  } catch (error) {
-    log.error('Delete agent error:', error);
-    res.status(500).json({
-      ok: false,
-      error: 'Failed to deactivate agent'
-    });
-  }
-});
-
 // Set default agent for the owner
 router.post('/agents/:agentId/set-default', authenticateOwner, async (req, res) => {
   try {

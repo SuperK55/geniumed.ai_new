@@ -29,5 +29,5 @@ export const env = {
   CURRENCY: (process.env.CURRENCY || 'BRL').toLowerCase(),
 
   // Authentication
-  JWT_SECRET: process.env.JWT_SECRET || 'secret'
+  JWT_SECRET: process.env.JWT_SECRET || 'geniumed-secret-key-change-in-production'
 };

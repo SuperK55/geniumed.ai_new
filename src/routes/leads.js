@@ -28,7 +28,10 @@ router.post('/lead/submit', async (req, res) => {
       utm_medium,
       utm_campaign,
       notes,
-      custom_fields = {}
+      custom_fields = {},
+      // Test mode
+      test_mode = false,
+      agent_id // Optional: specific agent for testing
     } = req.body;
 
     // Validation
@@ -46,23 +49,23 @@ router.post('/lead/submit', async (req, res) => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const { data: existingLead } = await supa
-      .from('leads')
-      .select('id, name, phone, created_at')
-      .eq('phone', cleanPhone)
-      .gte('created_at', yesterday.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // const { data: existingLead } = await supa
+    //   .from('leads')
+    //   .select('id, name, phone, created_at')
+    //   .eq('phone', cleanPhone)
+    //   .gte('created_at', yesterday.toISOString())
+    //   .order('created_at', { ascending: false })
+    //   .limit(1)
+    //   .single();
 
-    if (existingLead) {
-      log.info(`Duplicate lead detected: ${existingLead.id} for phone ${cleanPhone}`);
-      return res.status(409).json({
-        ok: false,
-        error: 'A lead with this phone number was already submitted recently',
-        existing_lead_id: existingLead.id
-      });
-    }
+    // if (existingLead) {
+    //   log.info(`Duplicate lead detected: ${existingLead.id} for phone ${cleanPhone}`);
+    //   return res.status(409).json({
+    //     ok: false,
+    //     error: 'A lead with this phone number was already submitted recently',
+    //     existing_lead_id: existingLead.id
+    //   });
+    // }
 
     // Create lead record
     const { data: newLead, error: leadError } = await supa
@@ -88,7 +91,6 @@ router.post('/lead/submit', async (req, res) => {
         notes,
         custom_fields,
         status: 'new',
-        next_retry_at: new Date().toISOString() // Immediate first attempt
       })
       .select()
       .single();
@@ -104,8 +106,15 @@ router.post('/lead/submit', async (req, res) => {
     log.info(`Lead created: ${newLead.id} - ${name} (${cleanPhone})`);
 
     try {
-      // Find appropriate doctor and agent for this lead
-      const assignment = await agentManager.findDoctorAndAgentForLead(newLead);
+      let assignment;
+      
+      if (test_mode && agent_id) {
+        // Test mode: use specific agent
+        assignment = await agentManager.findDoctorAndAgentForLead(newLead, agent_id);
+      } else {
+        // Normal mode: find appropriate doctor and agent
+        assignment = await agentManager.findDoctorAndAgentForLead(newLead);
+      }
       
       // Assign doctor and agent to lead
       const updatedLead = await agentManager.assignDoctorAndAgentToLead(

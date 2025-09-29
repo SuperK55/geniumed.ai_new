@@ -39,23 +39,43 @@ async function computeNextRetry(attemptNo, { inVoicemail = false, leadId = null 
     }
   }
 
-  // New time windows: 10:00 AM and 6:00 PM
-  // Calculate next available time slot
+  // Calculate next available time slot (Monday to Saturday, 8 AM to 8 PM)
   const calculateNextSlot = (fromTime) => {
     const d = new Date(fromTime);
     const currentHour = d.getHours();
     const currentMinute = d.getMinutes();
+    const currentDay = d.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     
-    // Check if we can schedule for today's 6 PM (and it's before 6 PM)
-    if (currentHour < 18 || (currentHour === 18 && currentMinute === 0)) {
-      d.setHours(18, 0, 0, 0);
+    // Add 2 hours to current time
+    d.setTime(d.getTime() + 2 * 60 * 60 * 1000);
+    
+    // Check if the new time is within business hours (8 AM to 8 PM)
+    if (d.getHours() >= 8 && d.getHours() < 20) {
+      // Check if it's a valid day (Monday to Saturday)
+      if (d.getDay() >= 1 && d.getDay() <= 6) {
+        return d;
+      } else {
+        // If it's Sunday, move to Monday 8 AM
+        const daysUntilMonday = 8 - d.getDay(); // 8 - 0 = 8 days
+        d.setDate(d.getDate() + daysUntilMonday);
+        d.setHours(8, 0, 0, 0);
+        return d;
+      }
+    } else {
+      // If outside business hours, move to next business day 8 AM
+      if (d.getHours() >= 20) {
+        // If it's after 8 PM, move to next day
+        d.setDate(d.getDate() + 1);
+      }
+      
+      // Find next valid business day (Monday to Saturday)
+      while (d.getDay() === 0) { // Skip Sundays
+        d.setDate(d.getDate() + 1);
+      }
+      
+      d.setHours(8, 0, 0, 0);
       return d;
     }
-    
-    // Otherwise, schedule for tomorrow's 10 AM
-    d.setDate(d.getDate() + 1);
-    d.setHours(10, 0, 0, 0);
-    return d;
   };
   
   let nextRetryTime = calculateNextSlot(now);
@@ -66,27 +86,17 @@ async function computeNextRetry(attemptNo, { inVoicemail = false, leadId = null 
     const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
     
     // If the difference between next retry time and appointment is less than 2 hours,
-    // move to the next time slot
+    // move to the next available slot
     if (timeDiffHours < 2) {
-      // If next retry is 6 PM and too close to appointment, move to next day 10 AM
-      if (nextRetryTime.getHours() === 18) {
+      // Move to next business day 8 AM
+      nextRetryTime.setDate(nextRetryTime.getDate() + 1);
+      
+      // Find next valid business day (Monday to Saturday)
+      while (nextRetryTime.getDay() === 0) { // Skip Sundays
         nextRetryTime.setDate(nextRetryTime.getDate() + 1);
-        nextRetryTime.setHours(10, 0, 0, 0);
-      } else {
-        // If next retry is 10 AM and too close to appointment, try 6 PM same day
-        const sixPmSameDay = new Date(nextRetryTime);
-        sixPmSameDay.setHours(18, 0, 0, 0);
-        const timeDiffSixPm = Math.abs(appointmentTime.getTime() - sixPmSameDay.getTime());
-        const timeDiffHoursSixPm = timeDiffSixPm / (1000 * 60 * 60);
-        
-        if (timeDiffHoursSixPm >= 2) {
-          nextRetryTime = sixPmSameDay;
-        } else {
-          // Move to next day 10 AM
-          nextRetryTime.setDate(nextRetryTime.getDate() + 1);
-          nextRetryTime.setHours(10, 0, 0, 0);
-        }
       }
+      
+      nextRetryTime.setHours(8, 0, 0, 0);
     }
   }
   

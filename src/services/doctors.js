@@ -15,12 +15,18 @@ export function scoreDoctor(doc, p){
   return score; // no price/duration bias
 }
 
-export async function pickDoctorForLead(p){
-  const { data, error } = await supa
+export async function pickDoctorForLead(p, ownerId = null){
+  let query = supa
     .from('doctors')
-    .select('id,name,specialty,city,languages,tags,bio,telemedicine_available,consultation_price,return_consultation_price,consultation_duration,office_address,state')
-    .eq('is_active', true)
-    .limit(200);
+    .select('id,name,specialty,city,languages,tags,bio,telemedicine_available,consultation_price,return_consultation_price,consultation_duration,office_address,state,owner_id')
+    .eq('is_active', true);
+  
+  // If ownerId is provided, filter by owner
+  if (ownerId) {
+    query = query.eq('owner_id', ownerId);
+  }
+  
+  const { data, error } = await query.limit(200);
   if(error) throw new Error(error.message);
   const ranked = (data||[]).map(d=>({d,s:scoreDoctor(d,p)})).sort((a,b)=>b.s-a.s);
   return ranked[0]?.d || null;
