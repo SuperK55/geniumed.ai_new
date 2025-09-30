@@ -17,11 +17,8 @@ r.get('/fn/get-conversation-flow', async (req, res) => {
     if (!env.RETELL_API_KEY) {
       return res.status(500).json({ error: 'RETELL_API_KEY not configured' });
     }
-    if (!env.CONVERSATION_FLOW_ID) {
-      return res.status(500).json({ error: 'CONVERSATION_FLOW_ID not configured' });
-    }
 
-    const conversationFlowResponse = await client.conversationFlow.retrieve(env.CONVERSATION_FLOW_ID);
+    const conversationFlowResponse = await client.conversationFlow.retrieve("conversation_flow_2ee68e7a9a23");
     res.json(conversationFlowResponse);
   } catch (error) {
     console.error('Error retrieving conversation flow:', error);
@@ -100,7 +97,7 @@ r.post('/fn/book-appointment', async (req,res)=>{
 });
 
 r.post('/fn/set-communication-preference', async (req,res)=>{
-  const { lead_id, preferred_channel } = req.body.args || {};
+  const { lead_id, preferred_channel } = req.body || {};
   if(!lead_id || !preferred_channel) return res.status(400).json({ error:'lead_id and preferred_channel required' });
   await supa.from('leads').update({ preferred_channel }).eq('id', lead_id);
   res.json({ ok:true });

@@ -296,9 +296,13 @@ r.post('/retell/webhook', async (req, res) => {
         c.transcript ||
         evt.transcript ||
         (Array.isArray(c.transcript_object) ? JSON.stringify(c.transcript_object) : null);
+      const call_analysis = c.call_analysis || null;
+      const total_call_duration = c.call_cost.total_duration_seconds || null;
+
+      console.log('call_analysis', call_analysis, 'total_call_duration', total_call_duration);
       await supa
         .from('call_attempts')
-        .update({ transcript })
+        .update({ transcript, call_analysis, total_call_duration })
         .eq('id', attempt.id);
       return res.sendStatus(200);
     }

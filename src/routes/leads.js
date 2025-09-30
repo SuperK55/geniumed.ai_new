@@ -30,8 +30,7 @@ router.post('/lead/submit', async (req, res) => {
       notes,
       custom_fields = {},
       // Test mode
-      test_mode = false,
-      agent_id // Optional: specific agent for testing
+      test_mode = false
     } = req.body;
 
     // Validation
@@ -108,13 +107,8 @@ router.post('/lead/submit', async (req, res) => {
     try {
       let assignment;
       
-      if (test_mode && agent_id) {
-        // Test mode: use specific agent
-        assignment = await agentManager.findDoctorAndAgentForLead(newLead, agent_id);
-      } else {
-        // Normal mode: find appropriate doctor and agent
-        assignment = await agentManager.findDoctorAndAgentForLead(newLead);
-      }
+      // Find appropriate doctor and agent based on owner_id
+      assignment = await agentManager.findDoctorAndAgentForLead(newLead);
       
       // Assign doctor and agent to lead
       const updatedLead = await agentManager.assignDoctorAndAgentToLead(
@@ -122,6 +116,7 @@ router.post('/lead/submit', async (req, res) => {
         assignment.doctor,
         assignment.agent
       );
+
 
       log.info(`Lead ${newLead.id} assigned to doctor ${assignment.doctor.id} (${assignment.doctor.name}) with agent ${assignment.agent.id}`);
 

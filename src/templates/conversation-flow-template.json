@@ -1,5 +1,5 @@
 {
-    "global_prompt": "Your name is {{assistant_name}}. You're always very charismatic, with a cheerful and lively voice.\n\n## Objective:\nConfirm identity, understand the need, suggest the ideal doctor, and conclude the consultation politely and naturally.\n\n## Style Principles\n- Be concise: Keep answers to less than two sentences, unless explaining complex topics.\n- Present the doctor's authority only once. Never repeat it in any case. If needed, simply answer.\n- Don't be too tied to the script. Be more natural and fluid.\n- Use SSML for pacing (<break time='500ms'/>, slower speech, emphasis).\n- Be conversational: Use natural language, contractions, and acknowledge what the speaker is saying.\n- Be empathetic: Demonstrate understanding of the speaker's situation.\n- **CRITICAL**: If you have already presented doctor's credentials/authority once, NEVER repeat them again. If user asks questions, answer directly without re-explaining the doctor's background.\n- **CRITICAL**: If user shows signs of wanting to end the call (says goodbye, mentions being in a hurry, etc.), respect their time and conclude politely without repeating information.\n- **CRITICAL**: Always acknowledge what the user says before transitioning to a new topic. Never ignore their questions or comments.\n- **CRITICAL**: Use natural transitions between topics. Avoid abrupt jumps like \"Let me quickly explain how it works\" without context.\n\n## Conversation Flow Guidelines\n- Always respond to user's questions before proceeding\n- Use acknowledgment phrases: \"Entendi\", \"Perfeito\", \"Que bom saber\"\n- Bridge topics naturally: \"Com base no que você me contou...\", \"Então, deixe eu te explicar...\"\n- Wait for user responses - don't rush through the script\n- Be genuinely interested in their responses\n\n## Response Guidelines\nReturn dates in spoken format: Say \"dezessete de setembro\" and not \"17/09\" and Say “Dezessete de setembro de dois mil e vinte e cinco” and not \"17/09/2025\"\nAsk one question at a time: Avoid overwhelming the other person with multiple questions.\n\nConfirm understanding: Paraphrase important information for the other person.\nWhen speaking the phone number, transform the format as follows:\n- Insert formats such as 9132\n- Should be pronounced as: \"nine one three two\"\n- Important: Do not omit the space around the hyphen when speaking\n\nRules:\n• Speak in a calm and positive tone, using short sentences, and confirm understanding.\n• If the patient interrupts, stop and respond.\n• For payment, offer a link via WhatsApp (preferably) or SMS, as preferred.\n• Never make up facts; Use only variables and functions. Context (if available):\n– Name: {{name}}, Last WhatsApp message: {{phone_last4}}\n– City: {{city}}, Specialty: {{specialty}}, Reason: {{reason}}\n– Suggested doctor: {{doctor_name}} ({{doctor_specialty}}), {{doctor_city}}. Telemedicine: {{telemedicine}}. Languages: {{doctor_languages}}. Focus: {{doctor_tags}}. Brief bio: {{doctor_bio}}. Fees: {{consultation_price}}, return {{return_consultation_price}}.\nClosing: After sending the payment link, explain that you can send the receipt via WhatsApp. If you don't pay now, offer to reschedule quickly.",
+    "global_prompt": "Your name is {{assistant_name}}. You're always very charismatic, with a cheerful and lively voice.\n\n## Objective:\nConfirm identity, understand the need, suggest the ideal doctor, and conclude the consultation politely and naturally.\n\n## Style Principles\n- Be concise: Keep answers to less than two sentences, unless explaining complex topics.\n- Present the doctor's authority only once. Never repeat it in any case. If needed, simply answer.\n- Don't be too tied to the script. Be more natural and fluid.\n- Use SSML for pacing (<break time='500ms'/>, slower speech, emphasis).\n- Be conversational: Use natural language, contractions, and acknowledge what the speaker is saying.\n- Be empathetic: Demonstrate understanding of the speaker's situation.\n- **CRITICAL**: If you have already presented doctor's credentials/authority once, NEVER repeat them again. If user asks questions, answer directly without re-explaining the doctor's background.\n- **CRITICAL**: If user shows signs of wanting to end the call (says goodbye, mentions being in a hurry, etc.), respect their time and conclude politely without repeating information.\n- **CRITICAL**: Always acknowledge what the user says before transitioning to a new topic. Never ignore their questions or comments.\n- **CRITICAL**: Use natural transitions between topics. Avoid abrupt jumps like \"Let me quickly explain how it works\" without context.\n\n## Conversation Flow Guidelines\n- Always respond to user's questions before proceeding\n- Use acknowledgment phrases: \"Entendi\", \"Perfeito\", \"Que bom saber\"\n- Bridge topics naturally: \"Com base no que você me contou...\", \"Então, deixe eu te explicar...\"\n- Wait for user responses - don't rush through the script\n- Be genuinely interested in their responses\n\n## Response Guidelines\nReturn dates in spoken format: Say \"dezessete de setembro\" and not \"17/09\" and Say “Dezessete de setembro de dois mil e vinte e cinco” and not \"17/09/2025\"\nAsk one question at a time: Avoid overwhelming the other person with multiple questions.\n\nConfirm understanding: Paraphrase important information for the other person.\nWhen speaking the phone number, transform the format as follows:\n- the last number (for example: 9132) should be pronounced as: \"nove um três dois\"\n- Important: Do not omit the space around the hyphen when speaking\n\nRules:\n• Speak in a calm and positive tone, using short sentences, and confirm understanding.\n• If the patient interrupts, stop and respond.\n• For payment, offer a link via WhatsApp (preferably) or SMS, as preferred.\n• Never make up facts; Use only variables and functions. Context (if available):\n– Name: {{name}}, Last WhatsApp message: {{phone_last4}}\n– City: {{city}}, Specialty: {{specialty}}, Reason: {{reason}}\n– Suggested doctor: {{doctor_name}} ({{doctor_specialty}}), {{doctor_city}}. Telemedicine: {{telemedicine}}. Languages: {{doctor_languages}}. Focus: {{doctor_tags}}. Brief bio: {{doctor_bio}}. Fees: {{consultation_price}}, return {{return_consultation_price}}.\nClosing: After sending the payment link, explain that you can send the receipt via WhatsApp. If you don't pay now, offer to reschedule quickly.",
     "nodes": [
         {
             "tool_id": "tool-1757295373150",
@@ -34,7 +34,7 @@
         {
             "instruction": {
                 "type": "prompt",
-                "text": "**IMPORTANT**: This node should present doctor authority ONLY ONCE per conversation. If you have already presented the doctor's credentials, DO NOT repeat them.\n\n**IF THIS IS THE FIRST TIME presenting the doctor:**\n\n**Step 1 - Natural Transition:**\n\"Com base no que você me contou, tenho o médico perfeito para o seu caso. <break time='400ms'/>\"\n\n**Step 2 - Autoridade (present naturally):**\nApresente as credenciais e especialidades do médico em um tom profissional, mas acolhedor. Fale devagar (5% mais devagar), com ênfase em conquistas e reputação.\n\"{{doctor_name}} é especialista em {{doctor_specialty}}, {{doctor_description}} <break time='500ms'/>\"\nFinalize esta parte com uma pergunta leve e envolvente: \"Isso parece alinhado com o que você está procurando? <break time='400ms'/>\"\n\n<aguarde a resposta do usuário>\n\n**Step 3 - Como funciona o serviço (only if user shows interest):**\n\"Perfeito! Então deixe eu te explicar rapidamente como funciona... <break time='400ms'/>\"\nForneça uma explicação clara e profissional do processo de consulta.\nUse um tom tranquilizador e confiante. Mencione claramente a duração e {{price_first}}.\n\"{{script_service_description}}\"\n\n**Step 4 - Escassez:**\n\"{{script_availability}}\"\n\n**IF YOU HAVE ALREADY PRESENTED THE DOCTOR BEFORE:**\n- Simply answer the user's specific question\n- Do NOT repeat credentials, background, or authority information\n- Focus only on addressing their current concern\n- Be concise and respectful of their time\n\nUse SSML para ritmo (<break time='500ms'/>, fala mais lenta, ênfase).\n\n**NEVER REPEAT DOCTOR'S AUTHORITY/CREDENTIALS INFORMATION ONCE IT HAS BEEN PRESENTED.**\n**ALWAYS USE NATURAL TRANSITIONS BETWEEN TOPICS.**"
+                "text": "**IMPORTANT**: This node should present doctor authority ONLY ONCE per conversation. If you have already presented the doctor's credentials, DO NOT repeat them.\n\n**IF THIS IS THE FIRST TIME presenting the doctor:**\n\n**Step 1 - Natural Transition:**\n\"Com base no que você me contou, tenho o médico perfeito para o seu caso. <break time='400ms'/>\"\n\n**Step 2 - Autoridade (present naturally):**\nApresente as credenciais e especialidades do médico em um tom profissional, mas acolhedor. Fale devagar (5% mais devagar), com ênfase em conquistas e reputação.\n\"{{doctor_name}} é especialista em {{doctor_specialty}}, {{doctor_bio}} <break time='500ms'/>\"\nFinalize esta parte com uma pergunta leve e envolvente: \"Isso parece alinhado com o que você está procurando? <break time='400ms'/>\"\n\n<aguarde a resposta do usuário>\n\n**Step 3 - Como funciona o serviço (only if user shows interest):**\n\"Perfeito! Então deixe eu te explicar rapidamente como funciona... <break time='400ms'/>\"\nForneça uma explicação clara e profissional do processo de consulta.\nUse um tom tranquilizador e confiante. Mencione claramente a duração e {{consultation_price}}.\n\"{{script_service_description}}\"\n\n**Step 4 - Escassez:**\n\"{{script_availability}}\"\n\n**IF YOU HAVE ALREADY PRESENTED THE DOCTOR BEFORE:**\n- Simply answer the user's specific question\n- Do NOT repeat credentials, background, or authority information\n- Focus only on addressing their current concern\n- Be concise and respectful of their time\n\nUse SSML para ritmo (<break time='500ms'/>, fala mais lenta, ênfase).\n\n**NEVER REPEAT DOCTOR'S AUTHORITY/CREDENTIALS INFORMATION ONCE IT HAS BEEN PRESENTED.**\n**ALWAYS USE NATURAL TRANSITIONS BETWEEN TOPICS.**"
             },
             "model_choice": {
                 "type": "cascading",
@@ -69,9 +69,7 @@
                 }
             ],
             "id": "node-1757296784338",
-            "knowledge_base_ids": [
-                "knowledge_base_ee0b3888fd017604"
-            ],
+            "knowledge_base_ids": [],
             "type": "conversation",
             "display_position": {
                 "x": 1468.8893945622335,
@@ -100,10 +98,7 @@
                 }
             ],
             "id": "node-1757298321223",
-            "knowledge_base_ids": [
-                "knowledge_base_1b372eddb81da5d0",
-                "knowledge_base_ee0b3888fd017604"
-            ],
+            "knowledge_base_ids": [],
             "type": "conversation",
             "display_position": {
                 "x": 666.8546674185347,
@@ -210,60 +205,6 @@
             }
         },
         {
-            "tool_id": "tool-1757365061137",
-            "instruction": {
-                "type": "prompt",
-                "text": "Define what to say when calling the function"
-            },
-            "model_choice": {
-                "type": "cascading",
-                "model": "gpt-4.1",
-                "high_priority": true
-            },
-            "name": "Create Payment Link",
-            "edges": [
-                {
-                    "destination_node_id": "node-1757418992953",
-                    "id": "edge-1757366600226",
-                    "transition_condition": {
-                        "type": "equation",
-                        "equations": [
-                            {
-                                "left": "{{preferred_channel}}",
-                                "operator": "==",
-                                "right": "whatsapp"
-                            }
-                        ],
-                        "operator": "||"
-                    }
-                },
-                {
-                    "destination_node_id": "node-1757419065849",
-                    "id": "edge-1757366631232",
-                    "transition_condition": {
-                        "type": "equation",
-                        "equations": [
-                            {
-                                "left": "{{preferred_channel}}",
-                                "operator": "==",
-                                "right": "sms"
-                            }
-                        ],
-                        "operator": "||"
-                    }
-                }
-            ],
-            "id": "node-1757365066232",
-            "type": "function",
-            "tool_type": "local",
-            "speak_during_execution": true,
-            "display_position": {
-                "x": 4166.14803711099,
-                "y": 1046.0782416704712
-            },
-            "wait_for_result": true
-        },
-        {
             "variables": [
                 {
                     "name": "preferred_channel",
@@ -305,7 +246,7 @@
             "name": "Save Preference",
             "edges": [
                 {
-                    "destination_node_id": "node-1757365066232",
+                    "destination_node_id": "node-1757419090465",
                     "id": "edge-1757366272080",
                     "transition_condition": {
                         "type": "prompt",
@@ -320,62 +261,6 @@
             "display_position": {
                 "x": 3762.6860700674893,
                 "y": 950.1844896631428
-            },
-            "wait_for_result": true
-        },
-        {
-            "tool_id": "tool-1757418989577",
-            "model_choice": {
-                "type": "cascading",
-                "model": "gpt-5-mini",
-                "high_priority": true
-            },
-            "name": "Send Link Wa",
-            "edges": [
-                {
-                    "destination_node_id": "node-1757419090465",
-                    "id": "edge-1757478801091",
-                    "transition_condition": {
-                        "type": "prompt",
-                        "prompt": "Always confirm_sent"
-                    }
-                }
-            ],
-            "id": "node-1757418992953",
-            "type": "function",
-            "tool_type": "local",
-            "speak_during_execution": false,
-            "display_position": {
-                "x": 4041.718526733238,
-                "y": 1923.0623796929472
-            },
-            "wait_for_result": true
-        },
-        {
-            "tool_id": "tool-1757419062296",
-            "model_choice": {
-                "type": "cascading",
-                "model": "gpt-5-mini",
-                "high_priority": true
-            },
-            "name": "Send Link Sms",
-            "edges": [
-                {
-                    "destination_node_id": "node-1757419090465",
-                    "id": "edge-1757478777804",
-                    "transition_condition": {
-                        "type": "prompt",
-                        "prompt": "Always confirm_sent"
-                    }
-                }
-            ],
-            "id": "node-1757419065849",
-            "type": "function",
-            "tool_type": "local",
-            "speak_during_execution": false,
-            "display_position": {
-                "x": 4079.1247689474358,
-                "y": 1712.2284689321214
             },
             "wait_for_result": true
         },
@@ -399,7 +284,7 @@
             },
             "instruction": {
                 "type": "prompt",
-                "text": "Acabei de te enviar o link. Você pode pagar quando quiser e me enviar o recibo por WhatsApp depois. Caso não haja resposta, o agendamento será cancelado automaticamente, ok?\n\n**IMPORTANT**: If user says goodbye or wants to end the call, simply thank them and end politely. DO NOT repeat doctor information or credentials again."
+                "text": "Enviarei o link pelo {{preferrred_channel}}. Você pode pagar quando quiser e me enviar o comprovante pelo WhatsApp depois. Caso não haja resposta, a consulta será cancelada automaticamente, ok?\n\n**IMPORTANTE**: Se o usuário se despedir ou quiser encerrar a ligação, simplesmente agradeça e encerre educadamente. NÃO repita informações ou credenciais do médico.\n\n- Encerramento\n“Obrigado pelo seu tempo. Em nome do {{doctor_name}}, será um prazer receber você em consulta. Até breve!”"
             }
         },
         {
@@ -523,7 +408,7 @@
             },
             "instruction": {
                 "type": "prompt",
-                "text": "Informaremos a programação possível em até 2 dias. Agradecemos o seu tempo!"
+                "text": "Obrigado pelo seu tempo. Em nome do {{doctor_name}}, será um prazer receber você em consulta. Até breve!"
             }
         },
         {
@@ -650,7 +535,7 @@
             "query_params": {
                 "description": "Consulta com {{doctor_name}} ({{doctor_specialty}})",
                 "lead_id": "{{lead_id}}",
-                "amount": "{{price_first}}"
+                "amount": "{{consultation_price}}"
             },
             "description": "",
             "type": "custom",
@@ -690,7 +575,7 @@
             },
             "description": "",
             "type": "custom",
-            "url": "https://agent.geniumed.ai/fn/set-communication-preference",
+            "url": "https://agent.geniumed.ai/api/fn/set-communication-preference",
             "tool_id": "tool-1757365620921",
             "args_at_root": false,
             "timeout_ms": 120000,
@@ -794,7 +679,7 @@
             "query_params": {},
             "description": "",
             "type": "custom",
-            "url": "https://agent.geniumed.ai/fn/send-payment-link",
+            "url": "https://agent.geniumed.ai/api/fn/send-payment-link",
             "tool_id": "tool-1757419062296",
             "args_at_root": false,
             "timeout_ms": 120000,
@@ -822,10 +707,7 @@
     },
     "model_temperature": 0.3,
     "tool_call_strict_mode": false,
-    "knowledge_base_ids": [
-        "knowledge_base_ee0b3888fd017604",
-        "knowledge_base_1b372eddb81da5d0"
-    ],
+    "knowledge_base_ids": [],
     "kb_config": {
         "top_k": 3,
         "filter_score": 0.6

@@ -70,6 +70,15 @@ class AgentManager {
       // Create agent in Retell
       const agentResponse = await retellClient.agent.create(agentConfig);
 
+      // // Publish the agent to make it available for calls
+      // try {
+      //   await retellClient.agent.publish(agentResponse.agent_id);
+      //   log.info(`Retell agent published: ${agentResponse.agent_id}`);
+      // } catch (publishError) {
+      //   log.error('Error publishing Retell agent:', publishError);
+      //   // Continue even if publish fails - agent might already be published
+      // }
+
       // Save to database
       const { data: dbAgent, error: dbError } = await supa
         .from('agents')
@@ -121,7 +130,7 @@ class AgentManager {
   /**
    * Find the best doctor and agent for a lead based on owner's selection
    */
-  async findDoctorAndAgentForLead(lead, specificAgentId = null) {
+  async findDoctorAndAgentForLead(lead) {
     try {
       let whereClause = {};
 
@@ -145,23 +154,7 @@ class AgentManager {
       // Get owner's selected agent (use default or find suitable agent)
       let selectedAgent = null;
 
-      // If specific agent ID provided (for testing), use that agent
-      if (specificAgentId) {
-        const { data: specificAgent, error: specificAgentError } = await supa
-          .from('agents')
-          .select('*')
-          .eq('id', specificAgentId)
-          .eq('is_active', true)
-          .single();
-
-        if (!specificAgentError && specificAgent) {
-          selectedAgent = specificAgent;
-        } else {
-          throw new Error(`Test agent ${specificAgentId} not found or inactive`);
-        }
-      } else if (lead.owner_id) {
-        // Try to get owner's default agent first
-        const { data: owner, error: ownerError } = await supa
+      const { data: owner, error: ownerError } = await supa
           .from('users')
           .select(`
             default_agent_id,
@@ -185,19 +178,6 @@ class AgentManager {
             selectedAgent = ownerAgents[0];
           }
         }
-      } else {
-        // If no specific owner, find any available agent that can handle the specialty
-        const { data: availableAgents, error: agentError } = await supa
-          .from('agents')
-          .select('*')
-          .eq('is_active', true)
-          .or(`specialties.cs.{${lead.specialty}},specialties.eq.{}`) // Either handles this specialty or handles all
-          .limit(1);
-
-        if (!agentError && availableAgents?.length > 0) {
-          selectedAgent = availableAgents[0];
-        }
-      }
 
       if (!selectedAgent) {
         throw new Error('No available agent found for this lead');
@@ -294,6 +274,21 @@ class AgentManager {
         throw new Error('Agent not found');
       }
 
+      // Calculate initial appointment date (1 month from now)
+      const now = new Date();
+      const initialAppointmentDate = new Date(now);
+      initialAppointmentDate.setMonth(initialAppointmentDate.getMonth() + 1);
+      
+      // Format in DD/MM style
+      const month = String(initialAppointmentDate.getMonth() + 1).padStart(2, '0'); // Add 1 because getMonth() is 0-based
+      const day = String(initialAppointmentDate.getDate()).padStart(2, '0');
+      const year = initialAppointmentDate.getFullYear();
+      
+      // Format based on whether it's in the same year
+      const appointmentDateOnly = now.getFullYear() === initialAppointmentDate.getFullYear() 
+        ? `${day}/${month}` // "15/11" (same year)
+        : `${day}/${month}/${year}`; // "15/01/2026" (different year)
+
       // Merge lead data with agent variables and ensure all values are strings
       const callVariables = {
         ...lead.agent_variables,
@@ -305,7 +300,8 @@ class AgentManager {
         specialty: String(lead.specialty || ''),
         reason: String(lead.reason || ''),
         urgency_level: String(lead.urgency_level || 1),
-        preferred_language: String(lead.preferred_language || 'Português')
+        preferred_language: String(lead.preferred_language || 'Português'),
+        initial_appointment_date: appointmentDateOnly
       };
 
       // Ensure all agent_variables are also strings
@@ -317,8 +313,6 @@ class AgentManager {
         });
       }
 
-      // Debug: Log the variables being sent
-      console.log('Call variables being sent to Retell:', JSON.stringify(callVariables, null, 2));
 
       // Validate required fields
       if (!agent.retell_agent_id) {
@@ -600,8 +594,6 @@ class AgentManager {
     
     // Replace template variables
     const variables = {
-      assistant_name: 'Clara',
-      business_name: owner.name || 'Nossa Clínica',
       webhook_base_url: env.APP_BASE_URL,
       // Include any custom variables passed in options
       ...options

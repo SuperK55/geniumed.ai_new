@@ -255,47 +255,6 @@ router.delete('/doctors/:doctorId', authenticateOwner, async (req, res) => {
 // AGENT MANAGEMENT ROUTES (Owner-Controlled)
 // ========================================
 
-// Create a new agent (independent of doctors)
-router.post('/agents', authenticateOwner, async (req, res) => {
-  try {
-    const agentData = req.body;
-
-    const newAgent = await agentManager.createAgentForOwner(req.ownerId, agentData);
-
-    res.status(201).json({
-      ok: true,
-      message: 'Agent created successfully',
-      agent: {
-        id: newAgent.id,
-        agent_name: newAgent.agent_name,
-        language: newAgent.language,
-        voice_id: newAgent.voice_id,
-        is_active: newAgent.is_active,
-        // Additional conversation control fields
-        agent_role: newAgent.agent_role,
-        service_description: newAgent.service_description,
-        assistant_name: newAgent.assistant_name,
-        script: newAgent.script
-      }
-    });
-
-  } catch (error) {
-    log.error('Create agent error:', error);
-    
-    if (error.message.includes('required')) {
-      return res.status(400).json({
-        ok: false,
-        error: error.message
-      });
-    }
-
-    res.status(500).json({
-      ok: false,
-      error: 'Failed to create agent'
-    });
-  }
-});
-
 // Get all agents for the business owner
 router.get('/agents', authenticateOwner, async (req, res) => {
   try {
@@ -315,39 +274,6 @@ router.get('/agents', authenticateOwner, async (req, res) => {
     res.status(500).json({
       ok: false,
       error: 'Failed to fetch agents'
-    });
-  }
-});
-
-// Get a specific agent
-router.get('/agents/:agentId', authenticateOwner, async (req, res) => {
-  try {
-    const { agentId } = req.params;
-
-    const { data: agent, error } = await supa
-      .from('agents')
-      .select('*')
-      .eq('id', agentId)
-      .eq('owner_id', req.ownerId)
-      .single();
-
-    if (error || !agent) {
-      return res.status(404).json({
-        ok: false,
-        error: 'Agent not found'
-      });
-    }
-
-    res.json({
-      ok: true,
-      agent
-    });
-
-  } catch (error) {
-    log.error('Get agent error:', error);
-    res.status(500).json({
-      ok: false,
-      error: 'Failed to fetch agent'
     });
   }
 });
@@ -412,25 +338,6 @@ router.post('/agents/:agentId/set-default', authenticateOwner, async (req, res) 
     res.status(500).json({
       ok: false,
       error: error.message || 'Failed to set default agent'
-    });
-  }
-});
-
-// Get default agent for the owner
-router.get('/agents/default', authenticateOwner, async (req, res) => {
-  try {
-    const defaultAgent = await agentManager.getDefaultAgent(req.ownerId);
-
-    res.json({
-      ok: true,
-      default_agent: defaultAgent
-    });
-
-  } catch (error) {
-    log.error('Get default agent error:', error);
-    res.status(500).json({
-      ok: false,
-      error: 'Failed to fetch default agent'
     });
   }
 });

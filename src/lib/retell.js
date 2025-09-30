@@ -32,21 +32,15 @@ export async function retellCreatePhoneCall(opts){
     const callParams = {
       to_number: opts.to_number || opts.customer_number,
       from_number: opts.from_number || env.RETELL_FROM_NUMBER,
-      agent_id: opts.agent_id,
       retell_llm_dynamic_variables: opts.retell_llm_dynamic_variables || {}
     };
+
+    console.log('=================================================Call params:', callParams);
 
     // Add metadata if provided
     if (opts.metadata) {
       callParams.metadata = opts.metadata;
     }
-
-    console.log('Making Retell call with params:', {
-      to_number: callParams.to_number,
-      from_number: callParams.from_number,
-      agent_id: callParams.agent_id,
-      has_variables: Object.keys(callParams.retell_llm_dynamic_variables).length > 0
-    });
 
     const r = await client.call.createPhoneCall(callParams);
     return r;
