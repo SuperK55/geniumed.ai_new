@@ -29,9 +29,15 @@ export async function retellCreatePhoneCall(opts){
       throw new Error('Agent ID is required for outbound calls');
     }
 
+    // Determine from_number: prioritize user's phone number, then provided from_number, then env var
+    let fromNumber = env.RETELL_FROM_NUMBER;
+    if (opts.from_number) {
+      fromNumber = opts.from_number;
+    }
+
     const callParams = {
       to_number: opts.to_number || opts.customer_number,
-      from_number: opts.from_number || env.RETELL_FROM_NUMBER,
+      from_number: fromNumber,
       retell_llm_dynamic_variables: opts.retell_llm_dynamic_variables || {}
     };
 

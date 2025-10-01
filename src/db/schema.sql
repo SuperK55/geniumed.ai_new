@@ -28,6 +28,9 @@ CREATE TABLE users (
   name TEXT NOT NULL,
   role TEXT DEFAULT 'owner' CHECK (role IN ('admin', 'owner', 'manager', 'staff')),
   
+  -- Contact information
+  phone_number TEXT, -- Phone number for outbound calls
+  
   -- Simplified profile fields
   specialty TEXT, -- Medical specialty (e.g., "Cardiology", "Neurology")
   about_me TEXT, -- Professional description and experience

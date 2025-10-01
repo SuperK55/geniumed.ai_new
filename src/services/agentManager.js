@@ -18,7 +18,7 @@ class AgentManager {
       // Get owner details
       const { data: owner, error: ownerError } = await supa
         .from('users')
-        .select('id, name')
+        .select('id, name, phone_number')
         .eq('id', ownerId)
         .single();
 
@@ -53,6 +53,7 @@ class AgentManager {
         language,
         voice_id,
         ambient_sound,
+        phone_number: owner.phone_number,
         ...agentData
       });
 
@@ -118,6 +119,11 @@ class AgentManager {
           .eq('id', ownerId);
       }
 
+      await retellClient.phoneNumber.update(owner.phone_number, {
+        inbound_agent_id: dbAgent.retell_agent_id,
+        outbound_agent_id: dbAgent.retell_agent_id,
+      });
+      
       log.info(`Created agent ${dbAgent.id} for owner ${ownerId} (${owner.name})`);
       return dbAgent;
 
@@ -263,10 +269,13 @@ class AgentManager {
         throw new Error('No agent assigned to lead');
       }
 
-      // Get agent details
+      // Get agent details with owner's phone number
       const { data: agent, error: agentError } = await supa
         .from('agents')
-        .select('*')
+        .select(`
+          *,
+          users!agents_owner_id_fkey(phone_number)
+        `)
         .eq('id', lead.assigned_agent_id)
         .single();
 
@@ -327,6 +336,7 @@ class AgentManager {
       const callResponse = await retellCreatePhoneCall({
         agent_id: agent.retell_agent_id,
         to_number: lead.phone,
+        from_number: agent.users?.phone_number, // Use owner's phone number as from_number
         customer_name: lead.name,
         metadata: callVariables,
         retell_llm_dynamic_variables: callVariables
@@ -580,7 +590,8 @@ class AgentManager {
       language: options.language || 'pt-BR',
       voice_id: options.voice_id || '11labs-Kate',
       version_title: `${options.name || 'Business'} Agent v1.0`,
-      ambient_sound: options.ambient_sound || 'coffee-shop'
+      ambient_sound: options.ambient_sound || 'coffee-shop',
+      phone_number: options.phone_number || ''
     };
 
     return this.replaceTemplateVariables(config, variables);

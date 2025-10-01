@@ -337,7 +337,7 @@
             ],
             "instruction": {
                 "type": "prompt",
-                "text": "Se o usuário responder que não pode esperar até a data disponível, gere uma oferta alternativa educada.\nUse um tom acolhedor e empático. Sugira tentar garantir um horário mais cedo, sem fazer promessas precipitadas.\n\nexemplo: \"Entendi, a agenda dele geralmente é concorrida. Mas eu posso tentar um encaixe e te retornar — Podemos fazer assim, eu te retorno em até dois dias\" (agente aguarda a resposta)"
+                "text": "Se o usuário responder que não pode esperar até a data disponível, gere uma oferta alternativa educada.\nUse um tom acolhedor e empático. Sugira tentar garantir um horário mais cedo, sem fazer promessas precipitadas.\n\nexemplo: \"Entendo perfeitamente. O que eu posso fazer é tentar conseguir um encaixe especial para você antes disso. Se for importante, eu te retorno ainda hoje ou até amanhã no máximo com uma atualização. Gostaria que eu tentasse esse encaixe?\" (agente aguarda a resposta)"
             },
             "name": "111",
             "edges": [

@@ -53,7 +53,6 @@ cron.schedule('*/10 * * * *', async () => {
     
     // Skip if outside business hours
     if (!isWithinBusinessHours()) {
-      log.info('Skipping retry scheduler - outside business hours');
       return;
     }
     

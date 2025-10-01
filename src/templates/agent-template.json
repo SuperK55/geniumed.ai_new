@@ -7,8 +7,8 @@
         "version": 0,
         "conversation_flow_id": "{{conversation_flow_id}}"
     },
-    "webhook_url": "{{webhook_url}}",
-    "language": "{{language}}",
+    "webhook_url": "https://agent.geniumed.ai/retell/webhook",
+    "language": "pt-BR",
     "opt_out_sensitive_data_storage": false,
     "data_storage_setting": "everything",
     "opt_in_signed_url": false,
@@ -16,24 +16,44 @@
     "post_call_analysis_data": [
         {
             "type": "boolean",
-            "name": "2days_later",
-            "description": "Whether user agree we contact him 2days later"
+            "name": "interested_in_appointment",
+            "description": "User's interest level in scheduling appointment"
         },
         {
-            "type": "string",
-            "name": "appointment_interest",
-            "description": "User's interest level in scheduling appointment"
+            "type": "boolean",
+            "name": "agreement_initial_appointment_date",
+            "description": "User's agreement to our initial appointment"
+        },
+        {
+            "type": "boolean",
+            "name": "agreement_sending_payment_link",
+            "description": "User's agreement to our sending payment link"
         },
         {
             "type": "string",
             "name": "specialty_match",
             "description": "How well the doctor specialty matches user needs"
+        },
+        {
+            "type": "string",
+            "name": "consultation_platform",
+            "description": "Platform user prefers to receive consultation confirmation (whatsapp, sms)"
+        },
+        {
+            "type": "boolean",
+            "name": "flexible_appointment_date",
+            "description": "Whether user want more flexible appointment date or earlier dates"
+        },
+        {
+            "type": "string",
+            "name": "urgency_level",
+            "description": "User's urgency level for consultation (low, medium, high, emergency)"
         }
     ],
     "version": 0,
     "is_published": false,
     "version_title": "{{version_title}}",
-    "post_call_analysis_model": "gpt-4o-mini",
+    "post_call_analysis_model": "gpt-4.1",
     "pii_config": {
         "mode": "post_call",
         "categories": []

@@ -271,10 +271,16 @@ router.put('/default/:agentId', verifyJWT, async (req, res) => {
     const { agentId } = req.params;
     const userId = req.user.id;
 
-    // Verify the agent belongs to the user
+    // Verify the agent belongs to the user and get user's phone number
     const { data: agent, error: agentError } = await supa
       .from('agents')
-      .select('id, agent_name, is_active')
+      .select(`
+        id, 
+        agent_name, 
+        is_active,
+        retell_agent_id,
+        users!agents_owner_id_fkey(phone_number)
+      `)
       .eq('id', agentId)
       .eq('owner_id', userId)
       .single();
@@ -295,6 +301,20 @@ router.put('/default/:agentId', verifyJWT, async (req, res) => {
 
     if (updateError) {
       throw new Error(updateError.message);
+    }
+
+    // Update Retell agent configuration with user's phone number if available
+    if (agent.retell_agent_id && agent.users?.phone_number) {
+      try {
+        await client.phoneNumber.update( agent.users.phone_number, {
+          inbound_agent_id: agent.retell_agent_id,
+          outbound_agent_id: agent.retell_agent_id,
+        })
+        log.info(`Updated Retell agent ${agent.retell_agent_id} with phone number ${agent.users.phone_number}`);
+      } catch (retellError) {
+        log.warn(`Failed to update Retell agent with phone number: ${retellError.message}`);
+        // Don't fail the request if Retell update fails
+      }
     }
 
     log.info(`User ${userId} set default agent to ${agentId} (${agent.agent_name})`);
@@ -423,21 +443,21 @@ router.patch('/:id', verifyJWT, async (req, res) => {
     }
 
     // Update Retell agent if retell_agent_id exists
-    if (currentAgent.retell_agent_id) {
-      try {
-        await client.agent.update(currentAgent.retell_agent_id, {
-          agent_name: updateData.agent_name,
-          // Add other fields that should be updated in Retell
-          ...(updateData.conversation_flow && {
-            conversation_flow: updateData.conversation_flow
-          })
-        });
-        log.info(`Retell agent updated: ${currentAgent.retell_agent_id}`);
-      } catch (retellError) {
-        log.error('Error updating Retell agent:', retellError);
-        // Continue with database update even if Retell update fails
-      }
-    }
+    // if (currentAgent.retell_agent_id) {
+    //   try {
+    //     await client.agent.update(currentAgent.retell_agent_id, {
+    //       agent_name: updateData.agent_name,
+    //       // Add other fields that should be updated in Retell
+    //       ...(updateData.conversation_flow && {
+    //         conversation_flow: updateData.conversation_flow
+    //       })
+    //     });
+    //     log.info(`Retell agent updated: ${currentAgent.retell_agent_id}`);
+    //   } catch (retellError) {
+    //     log.error('Error updating Retell agent:', retellError);
+    //     // Continue with database update even if Retell update fails
+    //   }
+    // }
 
     const { data: agent, error } = await supa
       .from('agents')
@@ -532,11 +552,11 @@ router.delete('/:id', verifyJWT, async (req, res) => {
         log.info(`Deleted ${callAttempts.length} call attempts for agent ${id}`);
       }
 
-      // Check if this agent is set as default_agent for any user
+        // Check if this agent is set as default_agent_id for any user
       const { data: usersWithDefaultAgent, error: usersError } = await supa
         .from('users')
         .select('id')
-        .eq('default_agent', id);
+        .eq('default_agent_id', id);
 
       if (usersError) {
         log.error('Error checking users with default agent:', usersError);
@@ -544,8 +564,8 @@ router.delete('/:id', verifyJWT, async (req, res) => {
         // Remove this agent as the default agent for all users
         const { error: updateUsersError } = await supa
           .from('users')
-          .update({ default_agent: null })
-          .eq('default_agent', id);
+          .update({ default_agent_id: null })
+          .eq('default_agent_id', id);
 
         if (updateUsersError) {
           log.error('Error updating users default agent:', updateUsersError);
