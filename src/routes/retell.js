@@ -202,7 +202,7 @@ r.post('/retell/webhook', async (req, res) => {
     if (type === 'call_started') {
       await supa
         .from('call_attempts')
-        .update({ started_at: new Date().toISOString() })
+        .update({ started_at: new Date().toISOString(), status: 'calling' })
         .eq('id', attempt.id);
       return res.sendStatus(200);
     }

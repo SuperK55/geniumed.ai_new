@@ -32,6 +32,10 @@ router.post('/', verifyJWT, async (req, res) => {
         service_description: newAgent.service_description,
         assistant_name: newAgent.assistant_name,
         script: newAgent.script,
+        // Agent settings
+        sent_paymentlink: newAgent.sent_paymentlink,
+        apply_discount_consultancy_pix: newAgent.apply_discount_consultancy_pix,
+        discount_percentage_pix: newAgent.discount_percentage_pix,
         created_at: newAgent.created_at,
         updated_at: newAgent.updated_at
       }

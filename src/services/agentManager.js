@@ -35,7 +35,16 @@ class AgentManager {
         // Additional conversation control fields
         agent_role,
         assistant_name,
-        script = {}
+        script = {},
+        // Consultation / Service configuration
+        return_policy_days = 30,
+        reimbursement_invoice_enabled = false,
+        payment_methods = { credit_card_installments: 4, pix_enabled: true },
+        confirmation_channel = 'whatsapp',
+        // Agent settings
+        sent_paymentlink = false,
+        apply_discount_consultancy_pix = false,
+        discount_percentage_pix = 0,
       } = agentData;
 
       // Validation
@@ -89,6 +98,15 @@ class AgentManager {
           agent_role: agent_role || 'Medical Assistant',
           assistant_name: assistant_name || 'Clara',
           script: script,
+          // Consultation / Service configuration
+          return_policy_days,
+          reimbursement_invoice_enabled,
+          payment_methods,
+          confirmation_channel,
+          // Agent settings
+          sent_paymentlink,
+          apply_discount_consultancy_pix,
+          discount_percentage_pix,
           retell_agent_id: agentResponse.agent_id,
           conversation_flow_id: conversationFlowResponse.conversation_flow_id,
           language,
@@ -96,7 +114,7 @@ class AgentManager {
           ambient_sound,
           custom_variables,
           is_active: true,
-          is_published: false
+          is_published: true
         })
         .select()
         .single();
@@ -205,6 +223,17 @@ class AgentManager {
    */
   async assignDoctorAndAgentToLead(leadId, doctor, agent) {
     try {
+      // Get owner information for business details
+      const { data: owner, error: ownerError } = await supa
+        .from('users')
+        .select('name, specialty, social_proof_enabled, social_proof_text')
+        .eq('id', agent.owner_id)
+        .single();
+
+      if (ownerError) {
+        log.warn('Could not fetch owner information:', ownerError);
+      }
+
       // Generate dynamic variables for the agent and ensure all values are strings
       const agentVariables = {
         doctor_name: String(doctor.name || ''),
@@ -215,18 +244,52 @@ class AgentManager {
         return_consultation_price: doctor.return_consultation_price ? `R$ ${doctor.return_consultation_price}` : 'Consulte',
         consultation_duration: String(doctor.consultation_duration || 90),
         telemedicine_available: doctor.telemedicine_available ? 'Sim' : 'Não',
-        doctor_phone: String(doctor.phone_number || ''),
         doctor_address: String(doctor.office_address || ''),
         doctor_city: String(doctor.city || ''),
         doctor_tags: String(doctor.tags?.join(', ') || ''),
         agent_name: String(agent.agent_name || ''),
-        agent_role: String(agent.agent_role || 'Medical Assistant'),
         assistant_name: String(agent.assistant_name || 'Clara'),
         webhook_base_url: String(env.APP_BASE_URL || ''),
+        // Include owner/business information
+        business_name: String(owner?.name || ''),
+        business_specialty: String(owner?.specialty || ''),
+        social_proof: owner?.social_proof_enabled ? `${owner?.social_proof_text}` : '',
         // Include script components
         script_greeting: String(agent.script?.greeting || 'Olá! Como posso ajudá-lo hoje?'),
         script_service_description: String(agent.script?.service_description || ''),
         script_availability: String(agent.script?.availability || 'Estamos disponíveis de segunda a sexta, das 8h às 18h.'),
+        // Include consultation/service configuration
+        return_policy_days: String(agent.return_policy_days || 30),
+        confirmation_channel: String(agent.confirmation_channel || 'whatsapp'),
+        paymentlink_global_prompt: String(agent.sent_paymentlink?'For payment, offer a link via Whatsapp.':'Offer to the user receiving confirmation via Whatsapp.'),
+        paymentlink_global_prompt_close: String(agent.sent_paymentlink?'Closing: After sending the payment link, explain that you can send the receipt via WhatsApp. If you dont pay now, offer to reschedule quickly.':''),
+        apply_discount_consultancy_pix: String(agent.apply_discount_consultancy_pix ? `If user ask some discount: Apply ${agent.discount_percentage_pix || 0}% discount for PIX payments` : 'If user ask some discount: "Infelizmente, eu não consigo desconto no valor da consulta."'),
+        // Dynamic payment methods sentence
+        payment_methods: (() => {
+          const installments = agent.payment_methods?.credit_card_installments || 4;
+          const pixEnabled = agent.payment_methods?.pix_enabled ?? true;
+          const reimbursementEnabled = agent.reimbursement_invoice_enabled || false;
+          
+          let sentence = '';
+          
+          // Add reimbursement info if enabled
+          if (reimbursementEnabled) {
+            sentence += 'Se você tiver plano de saúde, emitiremos uma nota para reembolso. ';
+          }
+          
+          // Add payment methods
+          sentence += 'O valor da consulta pode ser pago no cartão de crédito em até ';
+          sentence += `${installments}X`;
+          
+          if (pixEnabled) {
+            sentence += ' ou à vista no PIX';
+          }
+          
+          sentence += '. O que ficar melhor para você.';
+          
+          return sentence;
+        })(),
+        paymentlink: String(agent.sent_paymentlink?'Enviarei o link pelo whatsapp. Você pode pagar quando quiser e me enviar o comprovante pelo WhatsApp depois. Caso não haja resposta, a consulta será cancelada automaticamente, ok?':'Ótimo, seu horário para {{initial_appointment_date}} já está reservado. Enviarei a confirmação por WhatsApp agora mesmo.'),
         // Include agent's custom variables (convert to strings)
         ...(agent.custom_variables ? Object.fromEntries(
           Object.entries(agent.custom_variables).map(([key, value]) => [
@@ -235,6 +298,7 @@ class AgentManager {
           ])
         ) : {})
       };
+      
 
       // Update lead with assignment
       const { data: updatedLead, error } = await supa
@@ -426,6 +490,7 @@ class AgentManager {
         consultation_duration = 90,
         telemedicine_available = false,
         working_hours = {},
+        date_specific_availability = [],
         timezone = 'America/Sao_Paulo',
         office_address,
         city,
@@ -461,6 +526,7 @@ class AgentManager {
           consultation_duration: parseInt(consultation_duration),
           telemedicine_available: Boolean(telemedicine_available),
           working_hours,
+          date_specific_availability: Array.isArray(date_specific_availability) ? date_specific_availability : [],
           timezone,
           office_address,
           city,

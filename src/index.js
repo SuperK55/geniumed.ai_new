@@ -13,6 +13,9 @@ import twilioRoutes from './routes/twilio.js';
 import stripeWebhook from './routes/stripe.js';
 import functions from './routes/functions.js';
 import auth from './routes/auth.js';
+import googleCalendar from './routes/google-calendar.js';
+import appointments from './routes/appointments.js';
+import whatsapp from './routes/whatsapp.js';
 import './scheduler.js';
 import { rawBodySaver } from './middleware/rawBody.js';
 
@@ -30,6 +33,9 @@ app.use(retell);
 app.use(twilioRoutes);
 app.use(stripeWebhook);
 app.use(functions);
+app.use('/google-calendar', googleCalendar);
+app.use('/appointments', appointments);
+app.use('/whatsapp', whatsapp);
 
 app.use((err, _req, res, _next) => {
   log.error(err);

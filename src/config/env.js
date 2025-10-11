@@ -22,11 +22,20 @@ export const env = {
   GOOGLE_CLIENT_EMAIL: process.env.GOOGLE_CLIENT_EMAIL,
   GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
   GCAL_CALENDAR_ID: process.env.GCAL_CALENDAR_ID,
+  
+  // Google OAuth2 for Calendar
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
 
   MINDEE_API_KEY: process.env.MINDEE_API_KEY,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   CURRENCY: (process.env.CURRENCY || 'BRL').toLowerCase(),
+
+  // WhatsApp Business API
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'geniumed-whatsapp-verify-token',
+  WHATSAPP_APP_SECRET: process.env.WHATSAPP_APP_SECRET,
 
   // Authentication
   JWT_SECRET: process.env.JWT_SECRET || 'geniumed-secret-key-change-in-production'

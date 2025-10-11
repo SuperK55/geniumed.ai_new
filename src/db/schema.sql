@@ -33,7 +33,10 @@ CREATE TABLE users (
   
   -- Simplified profile fields
   specialty TEXT, -- Medical specialty (e.g., "Cardiology", "Neurology")
-  about_me TEXT, -- Professional description and experience
+  
+  -- Social proof
+  social_proof_enabled BOOLEAN DEFAULT false, -- Toggle to include a realistic success case
+  social_proof_text TEXT, -- One concise story that matches the service
   
   -- Agent selection preferences
   default_agent_id UUID, -- Default agent for this owner's leads
@@ -67,7 +70,8 @@ CREATE TABLE doctors (
   telemedicine_available BOOLEAN DEFAULT false,
   
   -- Availability
-  working_hours JSONB DEFAULT '{}'::jsonb, -- {"monday": {"start": "09:00", "end": "17:00"}, ...}
+  working_hours JSONB DEFAULT '{}'::jsonb, -- {"monday": {"enabled": true, "timeSlots": [{"id": "1", "start": "09:00", "end": "17:00"}]}, ...}
+  date_specific_availability JSONB DEFAULT '[]'::jsonb, -- [{"date": "2024-01-15", "type": "unavailable", "reason": "Holiday"}, ...]
   timezone TEXT DEFAULT 'America/Sao_Paulo',
   
   -- Contact and location
@@ -77,6 +81,14 @@ CREATE TABLE doctors (
   
   -- Professional tags and specializations
   tags TEXT[],
+  
+  -- Google Calendar integration
+  google_calendar_id TEXT, -- Google Calendar ID
+  google_refresh_token TEXT, -- Encrypted OAuth2 refresh token
+  google_access_token TEXT, -- Temporary access token (optional, can be regenerated)
+  google_token_expires_at TIMESTAMPTZ, -- When the access token expires
+  calendar_sync_enabled BOOLEAN DEFAULT false, -- Whether calendar sync is enabled
+  last_calendar_sync TIMESTAMPTZ, -- Last successful calendar sync timestamp
   
   -- System fields
   is_active BOOLEAN DEFAULT true,
@@ -97,6 +109,12 @@ CREATE TABLE agents (
   service_description TEXT, -- Description of services offered
   assistant_name TEXT, -- Name of the assistant (e.g., "Clara", "Maria")
   
+  -- Consultation / Service configuration
+  return_policy_days INTEGER DEFAULT 30, -- Number of days for a follow-up included (e.g., 30)
+  reimbursement_invoice_enabled BOOLEAN DEFAULT false, -- If enabled, we inform the user invoice is available for insurance claims
+  payment_methods JSONB DEFAULT '{"credit_card_installments": 4, "pix_enabled": true}'::jsonb, -- Payment methods configuration
+  confirmation_channel TEXT DEFAULT 'whatsapp' CHECK (confirmation_channel IN ('whatsapp', 'sms', 'email')), -- Choose where confirmations are sent
+  
   -- Script components
   script JSONB DEFAULT '{}'::jsonb, -- Contains greeting, service_description, availability
   
@@ -108,6 +126,9 @@ CREATE TABLE agents (
   language TEXT DEFAULT 'pt-BR',
   voice_id TEXT DEFAULT '11labs-Kate',
   ambient_sound TEXT DEFAULT 'coffee-shop',
+  sent_paymentlink BOOLEAN DEFAULT false, -- Whether to automatically send payment links after consultation booking
+  apply_discount_consultancy_pix BOOLEAN DEFAULT false, -- Whether to apply discount to consultancy pricing for PIX payments
+  discount_percentage_pix INTEGER DEFAULT 0, -- Discount percentage for PIX payments (0-100)
   
   -- Custom variables for this agent
   custom_variables JSONB DEFAULT '{}'::jsonb,

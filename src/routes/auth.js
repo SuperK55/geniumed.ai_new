@@ -29,13 +29,12 @@ const generateToken = (user) => {
 // Business Owner Sign Up Route
 router.post('/auth/signup', async (req, res) => {
   try {
-    const { 
-      email, 
-      password, 
+    const {
+      email,
+      password,
       name, 
       phone_number,
       specialty,
-      about_me,
       role = 'owner'
     } = req.body;
 
@@ -81,7 +80,6 @@ router.post('/auth/signup', async (req, res) => {
         phone_number: phone_number || null,
         role,
         specialty: specialty || '',
-        about_me: about_me || '',
         is_active: true
       })
       .select()
@@ -106,7 +104,8 @@ router.post('/auth/signup', async (req, res) => {
       phone_number: newUser.phone_number,
       role: newUser.role,
       specialty: newUser.specialty,
-      about_me: newUser.about_me,
+      social_proof_enabled: newUser.social_proof_enabled,
+      social_proof_text: newUser.social_proof_text,
       default_agent_id: newUser.default_agent_id,
       created_at: newUser.created_at
     };
@@ -181,7 +180,8 @@ router.post('/auth/signin', async (req, res) => {
       phone_number: user.phone_number,
       role: user.role,
       specialty: user.specialty,
-      about_me: user.about_me,
+      social_proof_enabled: user.social_proof_enabled,
+      social_proof_text: user.social_proof_text,
       default_agent_id: user.default_agent_id,
       created_at: user.created_at,
       last_login: user.last_login
@@ -241,7 +241,8 @@ router.get('/auth/verify', async (req, res) => {
         name: user.name,
         role: user.role,
         specialty: user.specialty,
-        about_me: user.about_me,
+        social_proof_enabled: user.social_proof_enabled,
+        social_proof_text: user.social_proof_text,
         default_agent_id: user.default_agent_id
       };
 
@@ -284,7 +285,8 @@ router.put('/auth/profile', async (req, res) => {
     const {
       name,
       specialty,
-      about_me,
+      social_proof_enabled,
+      social_proof_text,
       default_agent_id
     } = req.body;
 
@@ -292,7 +294,8 @@ router.put('/auth/profile', async (req, res) => {
     const updates = {};
     if (name !== undefined) updates.name = name;
     if (specialty !== undefined) updates.specialty = specialty;
-    if (about_me !== undefined) updates.about_me = about_me;
+    if (social_proof_enabled !== undefined) updates.social_proof_enabled = social_proof_enabled;
+    if (social_proof_text !== undefined) updates.social_proof_text = social_proof_text;
     if (default_agent_id !== undefined) {
       // Verify agent belongs to this user if provided
       if (default_agent_id) {
@@ -343,7 +346,8 @@ router.put('/auth/profile', async (req, res) => {
       name: updatedUser.name,
       role: updatedUser.role,
       specialty: updatedUser.specialty,
-      about_me: updatedUser.about_me,
+      social_proof_enabled: updatedUser.social_proof_enabled,
+      social_proof_text: updatedUser.social_proof_text,
       default_agent_id: updatedUser.default_agent_id
     };
 
