@@ -454,6 +454,9 @@ router.post('/consultation/:doctorId', verifyJWT, async (req, res) => {
         dateTime: start_time,
         timeZone: timezone
       },
+
+
+      
       end: {
         dateTime: end_time,
         timeZone: timezone

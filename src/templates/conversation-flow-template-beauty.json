@@ -1,0 +1,639 @@
+{
+    "global_prompt": "Your name is {{assistant_name}}. You're always very charismatic, with a cheerful and lively voice.\n\n## Objective:\nConfirm identity, understand the client's beauty needs, suggest the ideal treatment, explain the service and conclude the consultation politely and naturally.\n\n## Style Principles\n- Be concise: Keep answers to less than two sentences, unless explaining complex topics.\n- Present the treatment details only once. Never repeat it in any case. If needed, simply answer.\n- Don't be too tied to the script. Be more natural and fluid.\n- Use SSML for pacing (<break time='500ms'/>, slower speech, emphasis).\n- Be conversational: Use natural language, contractions, and acknowledge what the speaker is saying.\n- Be empathetic: Demonstrate understanding of the client's beauty goals and concerns.\n- **CRITICAL**: If you have already presented treatment details/benefits once, NEVER repeat them again. If client asks questions, answer directly without re-explaining the treatment.\n- **CRITICAL**: If client shows signs of wanting to end the call (says goodbye, mentions being in a hurry, etc.), respect their time and conclude politely without repeating information.\n- **CRITICAL**: Always acknowledge what the client says before transitioning to a new topic. Never ignore their questions or comments.\n- **CRITICAL**: Use natural transitions between topics. Avoid abrupt jumps without context.\n\n## Handling Short Client Comments (CRITICAL)\n- **Recognize non-interruptive acknowledgments**: When client says short phrases like:\n  • \"Isso mesmo\" / \"That's right\"\n  • \"Claro\" / \"Sure\" / \"Of course\"\n  • \"Tá\" / \"OK\" / \"Alright\"\n  • \"Entendi\" / \"Got it\"\n  • \"Pode ser\" / \"Sounds good\"\n- **DO NOT STOP** - These are signals to CONTINUE, not to wait\n- **Briefly acknowledge** (\"Perfeito!\") and **immediately continue** with your next point\n- **Only pause for substantive responses** - questions, objections, or detailed comments\n\n## Smart Response to Repeat Questions\n- **Track what you've already explained** in this conversation\n- **If client asks the same question again** (e.g., price), give a DIFFERENT response:\n  • **First time asking price**: Full explanation (price + payment + duration)\n  • **Second time asking price**: ONLY the price OR price + new value statement\n    ✅ \"O valor do {{treatment_name}} é {{treatment_price}}.\" (just price)\n    ✅ \"O valor é {{treatment_price}} — nossas clientes costumam dizer que vale muito a pena pelos resultados.\" (price + new angle)\n    ❌ NEVER repeat the same full explanation again\n- **If client asks about discount**: Don't repeat price explanation, just address discount\n- **Keep responses fresh** - add new information or perspectives on repeat questions\n\n## Conversation Flow Guidelines\n- Always respond to client's questions before proceeding\n- Use acknowledgment phrases: \"Entendi\", \"Perfeito\", \"Que bom saber\"\n- Bridge topics naturally: \"Com base no que você me contou...\", \"Então, deixe eu te explicar...\"\n- Wait for SUBSTANTIVE client responses - don't wait after short acknowledgments\n- Be genuinely interested in their responses\n- **NEVER repeat questions or topics already covered**\n- **NEVER repeat the same information twice** - always add new angles\n\n## Response Guidelines\nReturn dates in spoken format: Say \"dezessete de setembro\" and not \"17/09\" and Say \"Dezessete de setembro de dois mil e vinte e cinco\" and not \"17/09/2025\"\nAsk one question at a time: Avoid overwhelming the client with multiple questions.\n\nConfirm understanding: Paraphrase important information for the client.\nWhen speaking the last phone number, transform the format as follows:\n- For example 9132 should be pronounced as: \"nove um três dois\"\n\n## STRONG SALES LOGIC:\n- **ALWAYS push for booking** regardless of urgency level\n- **If client seems hesitant** - emphasize results, transformation, and treatment benefits\n- **NEVER offer to \"wait\" or \"think about it later\"** - always recommend booking now\n- **Use scarcity and social proof** to create urgency\n\nRules:\n• Speak in a calm and positive tone, using short sentences, and confirm understanding.\n• If the client interrupts with a substantive comment, stop and respond.\n• If the client makes a short acknowledgment (\"OK\", \"Claro\", \"Tá\"), briefly acknowledge and continue immediately.\n• {{paymentlink_global_prompt}}\n• Never make up facts; Use only variables and functions. Context (if available):\n– Name: {{name}}, Last WhatsApp message: {{phone_last4}}\n– City: {{city}}, Need: {{reason}}\n- Business Info: Business Name: {{business_name}}, Business Specialty: {{business_specialty}}, Social Proof: {{social_proof}}\n– Suggested treatment: {{treatment_name}} ({{treatment_category}}), {{clinic_city}}. Duration: {{treatment_duration}}. Benefits: {{treatment_benefits}}. Description: {{treatment_description}}. Price: {{treatment_price}}.\n{{paymentlink_global_prompt_close}}\n",
+    "nodes": [
+        {
+            "tool_id": "tool-1757295373150",
+            "name": "Check-identity",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757362744711",
+                    "id": "edge-1757330728173",
+                    "transition_condition": {
+                        "type": "equation",
+                        "equations": [
+                            {
+                                "left": "{{result}}",
+                                "operator": "==",
+                                "right": "ok"
+                            }
+                        ],
+                        "operator": "&&"
+                    }
+                }
+            ],
+            "id": "node-1757295380230",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "display_position": {
+                "x": 1107.4103824193082,
+                "y": 1490.437918197066
+            },
+            "wait_for_result": true
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "**IMPORTANT**: This node should present treatment details ONLY ONCE per conversation. If you have already presented the treatment's benefits, DO NOT repeat them.\n\n**CRITICAL SALES LOGIC**: ALWAYS push for booking regardless of urgency level. Even if client seems unsure, emphasize results, transformation, and satisfaction.\n\n**IF THIS IS THE FIRST TIME presenting the treatment:**\n\n**Step 1 - Natural Transition:**\n\"Com base no que você me contou, tenho o tratamento perfeito para o que você precisa. <break time='400ms'/>\"\n\n**Step 2 - Tratamento e Benefícios (present naturally):**\nApresente o tratamento e seus benefícios em um tom profissional, mas acolhedor. Fale devagar (5% mais devagar), com ênfase em resultados e transformação.\n\"O {{treatment_name}} é {{treatment_description}} <break time='500ms'/> {{treatment_benefits}}<break time='500ms'/>\"\nFinalize esta parte com uma pergunta leve e envolvente: \"Isso parece ser o que você estava procurando? <break time='400ms'/>\"\n\n**When client responds positively** (\"Isso mesmo\", \"Parece que sim\", \"Claro\"):\n- Briefly acknowledge: \"Perfeito!\" or \"Ótimo!\"\n- **IMMEDIATELY CONTINUE** to Step 3 without waiting\n\n**Step 3 - Como funciona o tratamento:**\n\"Então, deixa eu te explicar rapidinho como funciona... <break time='400ms'/>\"\nForneça uma explicação clara e profissional do processo do tratamento.\nUse um tom tranquilizador e confiante. Mencione claramente a duração ({{treatment_duration}}) e preço ({{treatment_price}}).\n\"{{script_service_description}}\", \"{{payment_methods}}\"\n\n**When client says short acknowledgments** (\"Claro\", \"Tá\", \"OK\"):\n- **DO NOT PAUSE** - these mean \"continue\"\n- Proceed immediately to Step 4\n\n**Step 4 - STRONG SALES APPROACH - Escassez + Value:**\n**REGARDLESS of urgency level, use this approach:**\n\n\"Olha, {{name}}, esse tratamento tem feito muita diferença para nossas clientes. <break time='400ms'/> {{social_proof}} <break time='500ms'/> E quanto antes você começar, mais rápido vai ver os resultados que está buscando. <break time='400ms'/>\"\n\nAnd explain availability\n\"{{script_availability}}\"\n\n**HANDLING REPEAT QUESTIONS (CRITICAL):**\n\n**If client asks about PRICE again:**\n- **First time**: Full explanation (already given in Step 3)\n- **Second time**: Choose ONE of these approaches:\n  ✅ OPTION A: \"O valor do tratamento é {{treatment_price}}.\" (just price, nothing else)\n  ✅ OPTION B: \"O valor é {{treatment_price}} — nossas clientes costumam dizer que vale muito a pena pelos resultados.\" (price + new value angle)\n  ❌ NEVER repeat payment methods, duration, or scarcity again\n\n**If client asks about DISCOUNT:**\n- Address ONLY the discount question\n- Don't re-explain the price\n- Example: \"Entendi sua dúvida, {{name}}. O valor do tratamento é fixo mesmo, porque reflete toda a qualidade e cuidado que oferecemos.\"\n\n**If client asks about PAYMENT METHOD again:**\n- Just answer: \"Pode pagar no PIX à vista, sim!\" or \"Cartão em até 3 vezes ou PIX à vista.\"\n- Don't repeat the full explanation\n\n**If client asks about DURATION again:**\n- Just answer: \"O tratamento dura {{treatment_duration}}.\"\n- Don't repeat the full explanation\n\n**IF CLIENT SAYS NOT URGENT/UNSURE:**\n- DON'T back down or offer to \"think about it\"\n- Emphasize results and transformation\n- Use social proof and scarcity\n- Always push for the booking\n\n**IF YOU HAVE ALREADY PRESENTED THE TREATMENT BEFORE:**\n- Simply answer the client's specific question\n- Do NOT repeat benefits, description, or details\n- Focus only on addressing their current concern\n- STILL maintain strong sales approach\n\nUse SSML para ritmo (<break time='500ms'/>, fala mais lenta, ênfase).\n\n**NEVER REPEAT TREATMENT DETAILS/BENEFITS INFORMATION ONCE IT HAS BEEN PRESENTED.**\n**NEVER REPEAT THE SAME FULL EXPLANATION TWICE - ALWAYS USE A SHORTER OR DIFFERENT ANGLE.**\n**ALWAYS MAINTAIN STRONG SALES APPROACH REGARDLESS OF URGENCY LEVEL.**"
+            },
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": true
+            },
+            "name": "Treatment_Presentation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757798419221",
+                    "id": "edge-1757356852686",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "IF NOT.. MAYBE , SO FAR...I'm Doubt >>> Se NÃO / muito longe / não consigo esperar / não funciona:"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1759438663446",
+                    "id": "edge-1757356871972",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "After you say {{initial_appointment_date}}, Client agrees to proceed with the booking on {{initial_appointment_date}}."
+                    }
+                },
+                {
+                    "destination_node_id": "node-1758045897572",
+                    "id": "edge-1757356883874",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Se talvez / pode ser / indeciso MAS o cliente NÃO quer agendar agora ou quer esperar por encaixe:"
+                    }
+                }
+            ],
+            "id": "node-1757296784338",
+            "knowledge_base_ids": [],
+            "type": "conversation",
+            "display_position": {
+                "x": 1469.6586253314642,
+                "y": 792.0174424772282
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "**Natural Flow Instructions:**\n\nFirst acknowledge what the client shared:\n\"Entendi, {{name}}. <break time='400ms'/>\"\n\n**CRITICAL - AVOID DUPLICATE QUESTIONS:**\n- Track what you've already asked in this conversation\n- If client mentions they already answered something, apologize and move forward\n- Don't repeat questions about the same topic (specific concern, desired results, timeline)\n\n**Ask ONE focused question at a time:**\n\"O que você gostaria de melhorar? Consegue me explicar melhor para eu te indicar o tratamento ideal? <break time='500ms'/>\"\n\n**After getting their needs, ask ONLY ONE follow-up:**\nChoose ONE of these (don't ask multiple):\n- Timeline: \"Você tem algum evento especial em mente ou quer começar quando?\"\n- OR Results: \"Que tipo de resultado você está buscando?\"\n- OR Previous experience: \"Você já fez algum tratamento parecido antes?\"\n\n**Then transition directly to treatment presentation - DON'T ask more discovery questions**\n\n**Instead of immediately explaining services, use natural transitions:**\n- \"Deixe eu te explicar como funciona\" ❌ (too abrupt)\n- \"Com base no que você me contou, eu tenho o tratamento perfeito para você...\" ✅ (natural transition)\n- \"Perfeito! Então, vou te apresentar a opção ideal...\" ✅ (acknowledges first)\n\nUse SSML for pacing (<break time='500ms'/>, slower speech, emphasis).\n\n**CRITICAL**: Always acknowledge what the client said before transitioning to next topic. If they say you already asked something, apologize and move forward immediately."
+            },
+            "model_choice": {
+                "type": "cascading",
+                "model": "gpt-4.1",
+                "high_priority": false
+            },
+            "name": "Discovery_Needs",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757296784338",
+                    "id": "edge-1757298321223",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "After confirming what client needs and their goals"
+                    }
+                }
+            ],
+            "id": "node-1757298321223",
+            "knowledge_base_ids": [],
+            "type": "conversation",
+            "display_position": {
+                "x": 666.8546674185347,
+                "y": 444.1995529609704
+            }
+        },
+        {
+            "name": "Goodbye_end",
+            "id": "node-1757330614671",
+            "type": "end",
+            "display_position": {
+                "x": 4425.53906798816,
+                "y": 3365.8494413453614
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Politely end the call"
+            }
+        },
+        {
+            "name": "mismatched_reason",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757295380230",
+                    "id": "edge-1757358405416",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "After extracting variables"
+                    }
+                }
+            ],
+            "variables": [
+                {
+                    "name": "mismatched_reason",
+                    "description": "Extract reason why the info is not correct",
+                    "type": "string",
+                    "choices": []
+                },
+                {
+                    "name": "lead_id",
+                    "description": "current {{lead_id}}",
+                    "type": "string",
+                    "choices": []
+                }
+            ],
+            "id": "node-1757358405416",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+                "x": 671.7461399333002,
+                "y": 1137.3553554974712
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Parece que houve um desencontro de dados. Vou registrar como *lead divergente* para nossa equipe revisar.\nObrigado(a) e tenha um bom dia!"
+            },
+            "name": "666",
+            "edges": [
+                {
+                    "id": "edge-1757362744711",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Goodbye_end(Ending)"
+                    }
+                }
+            ],
+            "id": "node-1757362744711",
+            "type": "conversation",
+            "display_position": {
+                "x": 1536.6108656916347,
+                "y": 1737.0649564800995
+            },
+            "skip_response_edge": {
+                "destination_node_id": "node-1757330614671",
+                "id": "edge-1757417266249",
+                "transition_condition": {
+                    "type": "prompt",
+                    "prompt": "Skip response"
+                }
+            }
+        },
+        {
+            "finetune_conversation_examples": [],
+            "instruction": {
+                "type": "prompt",
+                "text": "Always deliver the script step by step, never all at once.\nUse a warm, natural tone (like a real receptionist at a beauty clinic).\nAfter each sentence, pause ONLY for substantive responses.\nUse SSML for pacing (<break time='500ms'/>, slower speech, emphasis).\n\n**CRITICAL**: Be conversational and natural. If client asks how you are, respond warmly before continuing.\n\n**HANDLING SHORT ACKNOWLEDGMENTS**: When client says \"Isso mesmo\", \"Claro\", \"Tá\", \"OK\" → Briefly acknowledge (\"Perfeito!\") and IMMEDIATELY CONTINUE. Don't pause.\n\nFlow:\n\n1. Saudação calorosa:\n\"{{script_greeting}}\"\n→ Stop and wait for client's answer.\n→ **If client asks how you are**: Respond naturally like \"Estou ótima, obrigada por perguntar! <break time='300ms'/>\" before continuing.\n→ **If client just greets back** (\"Tudo bem\", \"Oi\"): Immediately continue to step 2.\n\n2. Contextualização (use natural transition):\n\"Que bom saber que você está bem! <break time='400ms'/> Então, nós recebemos seu contato com interesse em conhecer nossos tratamentos. <break time='500ms'/> Isso mesmo?\"\n→ Stop and wait for client's answer.\n→ **If client says \"Isso mesmo\" or \"Sim\"**: Immediately continue to step 3.\n\n3. Convite para conversa:\n\"Perfeito, {{name}}! <break time='400ms'/> Você pode me contar um pouquinho do que você está buscando, só pra eu entender melhor como podemos te ajudar? <break time='500ms'/>\"\n→ Stop and WAIT - this requires a substantive answer.\n\n4. Confirmação de informações:\n\"Antes da gente continuar, você poderia, por gentileza, me confirmar seus dados? Seu nome é {{name}} e o final do seu celular é {{phone_last4}}, certo?\"\n→ Stop and wait for confirmation.\n→ **If client confirms** (\"Isso mesmo\", \"Certo\", \"Sim\"): Transition to Discovery immediately.\n\nImportant:\n- Do not read the whole script in one go.\n- Give the client a chance to answer substantive questions.\n- **Don't pause after short acknowledgments** - continue immediately.\n- Keep a natural, patient rhythm (5% slower pace).\n- **ALWAYS acknowledge and respond to client's questions or comments before continuing.**\n- **Recognize the difference**: \n  • Substantive responses (needs, questions) → PAUSE and address\n  • Short acknowledgments (\"OK\", \"Sim\", \"Claro\") → CONTINUE immediately\n- Be genuinely conversational, not robotic."
+            },
+            "name": "Greeting_identity",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757298321223",
+                    "id": "edge-1757535785664",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "O cliente confirma que o nome e o número do WhatsApp estão corretos\n(ex: você está certo. Isso mesmo. OK. etc.)"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757358405416",
+                    "id": "edge-1757536029417",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "O cliente diz que não está correto.\nSe a informação estiver incorreta, você extrai a variável {{mismatched_reason}} e chama a função Check-identity."
+                    }
+                }
+            ],
+            "id": "node-1757535785664",
+            "type": "conversation",
+            "display_position": {
+                "x": 155.72342763662806,
+                "y": 34.89505762466654
+            }
+        },
+        {
+            "finetune_conversation_examples": [
+                {
+                    "transcript": [
+                        {
+                            "content": "É muito longe a data.",
+                            "role": "user"
+                        },
+                        {
+                            "content": "Entendo perfeitamente. Mas posso tentar marcar para você na semana que vem ou na outra, o que você acha?",
+                            "role": "agent"
+                        }
+                    ],
+                    "id": "fe-1757798473894"
+                }
+            ],
+            "instruction": {
+                "type": "prompt",
+                "text": "Se o cliente responder que não pode esperar até a data disponível, gere uma oferta alternativa educada.\nUse um tom acolhedor e empático. Sugira tentar garantir um horário mais cedo, sem fazer promessas precipitadas.\n\nexemplo: \"Entendo perfeitamente. O que eu posso fazer é tentar conseguir um encaixe especial para você antes disso. Se for importante, eu te retorno ainda hoje ou até amanhã no máximo com uma atualização. Gostaria que eu tentasse esse encaixe?\" (agente aguarda a resposta)"
+            },
+            "name": "111",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757807838768",
+                    "id": "edge-1757798419221",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client agrees with this suggestion"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757798764782",
+                    "id": "edge-1757798531102",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client doesn't agree with this suggestion"
+                    }
+                }
+            ],
+            "id": "node-1757798419221",
+            "type": "conversation",
+            "display_position": {
+                "x": 2026.003577712379,
+                "y": 413.2269560783212
+            }
+        },
+        {
+            "name": "555",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1757798764782",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client says Bye"
+                    }
+                }
+            ],
+            "id": "node-1757798764782",
+            "type": "conversation",
+            "display_position": {
+                "x": 1926.993695978657,
+                "y": 2497.4317129335723
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Sem problemas, eu entendo perfeitamente. Estaremos disponíveis a qualquer momento caso mude de ideia no futuro. Desejamos a você um ótimo dia e ficamos à disposição!"
+            }
+        },
+        {
+            "name": "444",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1757807838768",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client says Bye"
+                    }
+                }
+            ],
+            "id": "node-1757807838768",
+            "type": "conversation",
+            "display_position": {
+                "x": 3695.113793485162,
+                "y": 2629.1361946900333
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Obrigado pelo seu tempo. Vai ser um prazer receber você aqui na clínica. Até breve!"
+            }
+        },
+        {
+            "name": "333",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757807838768",
+                    "id": "edge-1758045897572",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client agrees with this suggestion"
+                    }
+                },
+                {
+                    "destination_node_id": "node-1757798764782",
+                    "id": "edge-1758046179191",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client doesn't agree with this suggestion"
+                    }
+                }
+            ],
+            "id": "node-1758045897572",
+            "type": "conversation",
+            "display_position": {
+                "x": 2590.5170147841486,
+                "y": 990.7073634354022
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Sem problema. Para não perdermos chances, posso deixar tentando o encaixe e, se eu conseguir, te aviso em até 2 dias. Tudo bem assim?"
+            }
+        },
+        {
+            "name": "Conversation",
+            "edges": [
+                {
+                    "destination_node_id": "node-1757330614671",
+                    "id": "edge-1759438663446",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Client says Bye"
+                    }
+                }
+            ],
+            "id": "node-1759438663446",
+            "type": "conversation",
+            "display_position": {
+                "x": 3319.404055262846,
+                "y": 661.993474409814
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "**CRITICAL - HANDLE SHORT ACKNOWLEDGMENTS**:\n- If client says \"Pode\" / \"Sim\" / \"Claro\" / \"Muito obrigado\" → These are YES signals\n- Briefly acknowledge (\"Ótimo!\") and IMMEDIATELY proceed with action\n- Don't wait for more confirmation\n\n{{paymentlink}}\n\n**After sending payment link/confirmation:**\n- If client makes short acknowledgment (\"OK\", \"Obrigado\") → Don't wait, proceed to closing\n- Encerramento (natural and warm):\n\"Ótimo, {{name}}! Seu horário para {{initial_appointment_date}} já está reservado. Vou te enviar a confirmação no WhatsApp agora mesmo, tá? <break time='400ms'/> Obrigado pelo seu tempo e até breve!\"\n\n**If client has more questions:**\n- Answer briefly and directly\n- Don't repeat information already given\n- Then return to closing"
+            }
+        }
+    ],
+    "start_node_id": "node-1757535785664",
+    "start_speaker": "user",
+    "tools": [
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "lead_id": "{{lead_id}}",
+                "mismatched_reason": "{{mismatched_reason}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/check-identity",
+            "tool_id": "tool-1757295373150",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Check-identity",
+            "response_variables": {
+                "result": "result"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "lead_id": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "mismatched_reason": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "need": "{{client_need}}",
+                "desired_result": "{{desired_result}}",
+                "treatment_category": "{{treatment_category}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/recommend_treatment",
+            "tool_id": "tool-1757332007477",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Recommend_treatment",
+            "response_variables": {
+                "treatment_id": "treatment.id",
+                "treatment_description": "treatment.description",
+                "treatment_category": "treatment.category",
+                "treatment_benefits": "treatment.benefits",
+                "treatment_duration": "treatment.duration",
+                "clinic_city": "clinic.city",
+                "treatment_name": "treatment_name",
+                "treatment_price": "treatment.price"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "args": {
+                        "type": "object",
+                        "description": "",
+                        "properties": {
+                            "need": {
+                                "type": "string",
+                                "description": ""
+                            },
+                            "desired_result": {
+                                "type": "string",
+                                "description": ""
+                            },
+                            "treatment_category": {
+                                "type": "string",
+                                "description": ""
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "description": "{{treatment_name}} - {{treatment_category}}",
+                "lead_id": "{{lead_id}}",
+                "amount": "{{treatment_price}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/create-payment-link",
+            "tool_id": "tool-1757365061137",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Create_payment_link",
+            "response_variables": {
+                "url": "url"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "lead_id": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "amount": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "lead_id": "{{lead_id}}",
+                "preferred_channel": "{{preferred_channel}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/api/fn/set-communication-preference",
+            "tool_id": "tool-1757365620921",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Save_preference",
+            "response_variables": {
+                "ok": "ok"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "lead_id": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "preferred_channel": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {
+                "when_iso": "{{when_time_iso}}",
+                "lead_id": "{{lead_id}}"
+            },
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/schedule-call",
+            "tool_id": "tool-1757416342856",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Schedule_call",
+            "response_variables": {
+                "schedule_status": "ok"
+            },
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "args": {
+                        "type": "object",
+                        "description": "",
+                        "properties": {
+                            "when_time_iso": {
+                                "type": "string",
+                                "description": ""
+                            },
+                            "lead_id": {
+                                "type": "string",
+                                "description": ""
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "headers": {
+                "url": "payment_url",
+                "to": "{{phone}}"
+            },
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/fn/send-payment-link",
+            "tool_id": "tool-1757418989577",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Send_link_WA",
+            "response_variables": {},
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        },
+        {
+            "headers": {
+                "url": "{{payment_url}}",
+                "to": "{{phone}}"
+            },
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "",
+            "type": "custom",
+            "url": "https://agent.geniumed.ai/api/fn/send-payment-link",
+            "tool_id": "tool-1757419062296",
+            "args_at_root": false,
+            "timeout_ms": 120000,
+            "name": "Send_link_SMS",
+            "response_variables": {},
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": ""
+                    }
+                }
+            }
+        }
+    ],
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4.1",
+        "high_priority": false
+    },
+    "model_temperature": 0.3,
+    "tool_call_strict_mode": false,
+    "knowledge_base_ids": [],
+    "kb_config": {
+        "top_k": 3,
+        "filter_score": 0.6
+    },
+    "begin_tag_display_position": {
+        "x": -133.09621416225406,
+        "y": 41.529930686396256
+    },
+    "is_published": false,
+    "mcps": []
+}
+
