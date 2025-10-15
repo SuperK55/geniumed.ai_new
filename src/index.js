@@ -13,6 +13,7 @@ import twilioRoutes from './routes/twilio.js';
 import stripeWebhook from './routes/stripe.js';
 import functions from './routes/functions.js';
 import auth from './routes/auth.js';
+import users from './routes/users.js';
 import googleCalendar from './routes/google-calendar.js';
 import appointments from './routes/appointments.js';
 import whatsapp from './routes/whatsapp.js';
@@ -26,6 +27,7 @@ app.use(cors());
 
 app.use(health);
 app.use(auth);
+app.use(users);
 app.use(leads);
 app.use(doctors);
 app.use('/agents', agents);

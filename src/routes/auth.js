@@ -27,104 +27,104 @@ const generateToken = (user) => {
 };
 
 // Business Owner Sign Up Route
-router.post('/auth/signup', async (req, res) => {
-  try {
-    const {
-      email,
-      password,
-      name, 
-      phone_number,
-      specialty,
-      role = 'owner'
-    } = req.body;
+// router.post('/auth/signup', async (req, res) => {
+//   try {
+//     const {
+//       email,
+//       password,
+//       name, 
+//       phone_number,
+//       specialty,
+//       role = 'owner'
+//     } = req.body;
 
-    // Basic validation
-    if (!email || !password || !name) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Email, password, and name are required'
-      });
-    }
+//     // Basic validation
+//     if (!email || !password || !name) {
+//       return res.status(400).json({
+//         ok: false,
+//         error: 'Email, password, and name are required'
+//       });
+//     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Password must be at least 8 characters long'
-      });
-    }
+//     if (password.length < 8) {
+//       return res.status(400).json({
+//         ok: false,
+//         error: 'Password must be at least 8 characters long'
+//       });
+//     }
 
-    // Check if user already exists
-    const { data: existingUser } = await supa
-      .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .single();
+//     // Check if user already exists
+//     const { data: existingUser } = await supa
+//       .from('users')
+//       .select('id')
+//       .eq('email', email.toLowerCase())
+//       .single();
 
-    if (existingUser) {
-      return res.status(409).json({
-        ok: false,
-        error: 'User with this email already exists'
-      });
-    }
+//     if (existingUser) {
+//       return res.status(409).json({
+//         ok: false,
+//         error: 'User with this email already exists'
+//       });
+//     }
 
-    // Hash password
-    const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
+//     // Hash password
+//     const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Create user with simplified fields only
-    const { data: newUser, error: userError } = await supa
-      .from('users')
-      .insert({
-        email: email.toLowerCase(),
-        password: password_hash,
-        name,
-        phone_number: phone_number || null,
-        role,
-        specialty: specialty || '',
-        is_active: true
-      })
-      .select()
-      .single();
+//     // Create user with simplified fields only
+//     const { data: newUser, error: userError } = await supa
+//       .from('users')
+//       .insert({
+//         email: email.toLowerCase(),
+//         password: password_hash,
+//         name,
+//         phone_number: phone_number || null,
+//         role,
+//         specialty: specialty || '',
+//         is_active: true
+//       })
+//       .select()
+//       .single();
 
-    if (userError) {
-      log.error('User creation error:', userError);
-      return res.status(500).json({
-        ok: false,
-        error: 'Failed to create user'
-      });
-    }
+//     if (userError) {
+//       log.error('User creation error:', userError);
+//       return res.status(500).json({
+//         ok: false,
+//         error: 'Failed to create user'
+//       });
+//     }
 
-    // Generate JWT token
-    const token = generateToken(newUser);
+//     // Generate JWT token
+//     const token = generateToken(newUser);
 
-    // Return success response
-    const userResponse = {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      phone_number: newUser.phone_number,
-      role: newUser.role,
-      specialty: newUser.specialty,
-      social_proof_enabled: newUser.social_proof_enabled,
-      social_proof_text: newUser.social_proof_text,
-      default_agent_id: newUser.default_agent_id,
-      created_at: newUser.created_at
-    };
+//     // Return success response
+//     const userResponse = {
+//       id: newUser.id,
+//       email: newUser.email,
+//       name: newUser.name,
+//       phone_number: newUser.phone_number,
+//       role: newUser.role,
+//       specialty: newUser.specialty,
+//       social_proof_enabled: newUser.social_proof_enabled,
+//       social_proof_text: newUser.social_proof_text,
+//       default_agent_id: newUser.default_agent_id,
+//       created_at: newUser.created_at
+//     };
 
-    res.status(201).json({
-      ok: true,
-      message: 'Account created successfully',
-      token,
-      user: userResponse
-    });
+//     res.status(201).json({
+//       ok: true,
+//       message: 'Account created successfully',
+//       token,
+//       user: userResponse
+//     });
 
-  } catch (error) {
-    log.error('Signup error:', error);
-    res.status(500).json({
-      ok: false,
-      error: 'Internal server error'
-    });
-  }
-});
+//   } catch (error) {
+//     log.error('Signup error:', error);
+//     res.status(500).json({
+//       ok: false,
+//       error: 'Internal server error'
+//     });
+//   }
+// });
 
 // Sign In Route (updated for business owners)
 router.post('/auth/signin', async (req, res) => {
@@ -284,7 +284,6 @@ router.put('/auth/profile', async (req, res) => {
 
     const {
       name,
-      specialty,
       social_proof_enabled,
       social_proof_text,
       default_agent_id
@@ -293,7 +292,6 @@ router.put('/auth/profile', async (req, res) => {
     // Build update object with only provided fields
     const updates = {};
     if (name !== undefined) updates.name = name;
-    if (specialty !== undefined) updates.specialty = specialty;
     if (social_proof_enabled !== undefined) updates.social_proof_enabled = social_proof_enabled;
     if (social_proof_text !== undefined) updates.social_proof_text = social_proof_text;
     if (default_agent_id !== undefined) {
@@ -400,7 +398,7 @@ router.post('/auth/change-password', async (req, res) => {
     // Get current user
     const { data: user, error: userError } = await supa
       .from('users')
-      .select('password_hash')
+      .select('password')
       .eq('id', decoded.id)
       .single();
 
@@ -412,7 +410,7 @@ router.post('/auth/change-password', async (req, res) => {
     }
 
     // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
     if (!isValidPassword) {
       return res.status(401).json({
         ok: false,
@@ -426,7 +424,7 @@ router.post('/auth/change-password', async (req, res) => {
     // Update password
     const { error: updateError } = await supa
       .from('users')
-      .update({ password_hash: newPasswordHash })
+      .update({ password: newPasswordHash })
       .eq('id', decoded.id);
 
     if (updateError) {

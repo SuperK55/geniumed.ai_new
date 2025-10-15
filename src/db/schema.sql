@@ -26,13 +26,13 @@ CREATE TABLE users (
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
-  role TEXT DEFAULT 'owner' CHECK (role IN ('admin', 'owner', 'manager', 'staff')),
+  role TEXT DEFAULT 'owner' CHECK (role IN ('admin', 'owner')),
   
   -- Contact information
   phone_number TEXT, -- Phone number for outbound calls
   
   -- Simplified profile fields
-  specialty TEXT, -- Medical specialty (e.g., "Cardiology", "Neurology")
+  specialty TEXT CHECK (specialty IN ('clinic', 'real_estate', 'consortia', 'insurance', 'beauty_clinic')), 
   
   -- Social proof
   social_proof_enabled BOOLEAN DEFAULT false, -- Toggle to include a realistic success case
